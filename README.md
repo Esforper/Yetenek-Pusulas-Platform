@@ -1,0 +1,1 @@
+# Yetenek-Pusulas-Platform
