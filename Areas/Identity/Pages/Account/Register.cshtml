@@ -12,7 +12,7 @@
             <h2>Create a new account.</h2>
             <hr />
             <div class="form-floating mb-3">
-                <select asp-for="Input.UserRole" class="form-select" asp-items="ViewBag.Roles">
+                <select asp-for="Input.UserRole" class="form-select" asp-items="@(ViewData["Roles"] as SelectList)">
                     <option selected="selected" value="">Rol Seçiniz...</option>
                 </select>
                 <label asp-for="Input.UserRole"></label>

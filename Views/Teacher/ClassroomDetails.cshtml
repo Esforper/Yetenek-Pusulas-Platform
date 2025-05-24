@@ -1,0 +1,43 @@
+@model YetenekPusulasi.Core.Entities.Classroom
+@{
+    ViewData["Title"] = Model.Name + " Sınıf Detayları";
+    var students = ViewBag.Students as IEnumerable<YetenekPusulasi.Data.ApplicationUser>;
+}
+
+<h1>@Model.Name</h1>
+<hr />
+<div>
+    <dl class="row">
+        <dt class="col-sm-3">Açıklama</dt>
+        <dd class="col-sm-9">@Model.Description</dd>
+        <dt class="col-sm-3">Katılım Kodu</dt>
+        <dd class="col-sm-9"><strong>@Model.ParticipationCode</strong></dd>
+        <dt class="col-sm-3">Öğretmen</dt>
+        <dd class="col-sm-9">@Model.Teacher.Email</dd>
+    </dl>
+</div>
+
+<h3>Sınıftaki Öğrenciler (@students?.Count())</h3>
+@if (students != null && students.Any())
+{
+    <table class="table table-sm">
+        <thead>
+            <tr><th>Öğrenci E-postası</th></tr>
+        </thead>
+        <tbody>
+            @foreach(var student in students)
+            {
+                <tr><td>@student.Email</td></tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Bu sınıfta henüz öğrenci bulunmamaktadır.</p>
+}
+
+<div>
+    <a asp-action="Dashboard" class="btn btn-secondary">Panele Dön</a>
+    @* Sınıfa senaryo atama vb. özellikler buraya eklenebilir *@
+</div>

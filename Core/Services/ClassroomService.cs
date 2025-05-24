@@ -6,7 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using YetenekPusulasi.Models; // ApplicationUser için
+using YetenekPusulasi.Models;
+using YetenekPusulasi.Areas.Identity.Data; // ApplicationUser için
 
 namespace YetenekPusulasi.Core.Services
 {

@@ -1,0 +1,27 @@
+@model YetenekPusulasi.Models.StudentViewModels.JoinClassroomViewModel
+@{
+    ViewData["Title"] = "Sınıfa Katıl";
+}
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="JoinClassroom">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group mb-3">
+                <label asp-for="ParticipationCode" class="control-label"></label>
+                <input asp-for="ParticipationCode" class="form-control" />
+                <span asp-validation-for="ParticipationCode" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Katıl" class="btn btn-success" />
+                <a asp-action="Dashboard" class="btn btn-secondary">İptal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

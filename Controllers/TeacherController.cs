@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using YetenekPusulasi.Core.Interfaces.Services;
+using YetenekPusulasi.Data;
 using YetenekPusulasi.Models; // ApplicationUser için
 using YetenekPusulasi.Models.ClassroomViewModels; // ViewModel'lar için
 

@@ -1,6 +1,8 @@
 using YetenekPusulasi.Core.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using YetenekPusulasi.Models;
+using YetenekPusulasi.Data;
 
 namespace YetenekPusulasi.Core.Interfaces.Services
 {

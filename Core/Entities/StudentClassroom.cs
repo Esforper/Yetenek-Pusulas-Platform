@@ -1,3 +1,6 @@
+using YetenekPusulasi.Data;
+using YetenekPusulasi.Models;
+
 namespace YetenekPusulasi.Core.Entities
 {
     public class StudentClassroom

@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Öğrenci Paneli";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<p>Hoş geldiniz, @User.Identity.Name!</p>
+
+<div class="mb-3">
+    <a asp-action="JoinClassroom" class="btn btn-primary">Sınıfa Katıl</a>
+</div>
+
+<h4>Katıldığım Sınıflar</h4>
+@* Buraya öğrencinin katıldığı sınıflar listelenecek *@
+<p><em>(Bu özellik daha sonra eklenecektir.)</em></p>
+
+<h4>Bana Atanan Senaryolar</h4>
+@* Buraya öğrenciye atanmış senaryolar listelenecek *@
+<p><em>(Bu özellik daha sonra eklenecektir.)</em></p>

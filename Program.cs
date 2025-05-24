@@ -7,22 +7,26 @@ using YetenekPusulasi.Core.Strategies;
 using YetenekPusulasi.Data; // ApplicationDbContext için
 using YetenekPusulasi.Data.Repositories;
 using Microsoft.EntityFrameworkCore; // EF Core için
+using Microsoft.AspNetCore.Identity.Data;
+using YetenekPusulasi.Models;
 using Microsoft.AspNetCore.Identity; // Identity için
 // using Microsoft.AspNetCore.Authentication.JwtBearer; // API için JWT kullanacaksanız
 // using Microsoft.IdentityModel.Tokens; // JWT için
 // using System.Text; // JWT için
+using YetenekPusulasi.Core.Interfaces.Repositories;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString)); // Veya kullandığınız DB provider
+builder.Services.AddDbContext<YetenekPusulasi.Areas.Identity.Data.ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
 // builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true) // IdentityUser'ı kendi ApplicationUser'ınızla değiştirebilirsiniz
+builder.Services.AddScoped<IClassroomService, ClassroomService>();
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false) // IdentityUser'ı kendi ApplicationUser'ınızla değiştirebilirsiniz
     .AddRoles<IdentityRole>() // Rolleri ekledik
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+    .AddEntityFrameworkStores<YetenekPusulasi.Areas.Identity.Data.ApplicationDbContext>();
 
 builder.Services.AddControllersWithViews(); // Eğer MVC View'ları da kullanacaksanız
 // builder.Services.AddRazorPages(); // Eğer Razor Pages kullanacaksanız
@@ -31,7 +35,7 @@ builder.Services.AddControllersWithViews(); // Eğer MVC View'ları da kullanaca
 // Repository'ler
 builder.Services.AddScoped<IScenarioRepository, ScenarioRepository>();
 builder.Services.AddScoped<IScenarioCategoryRepository, ScenarioCategoryRepository>();
-
+builder.Services.AddScoped<YetenekPusulasi.Core.Interfaces.Services.IScenarioService, YetenekPusulasi.Core.Services.ScenarioService>();
 // Stratejiler (tümünü kaydedip Service içinde seçiyoruz)
 builder.Services.AddScoped<RuleBasedScenarioStrategy>(); // Somut tip olarak kaydet
 builder.Services.AddScoped<AIModelScenarioStrategy>();   // Somut tip olarak kaydet
@@ -75,7 +79,21 @@ builder.Services.AddAuthentication(options => {
 
 
 var app = builder.Build();
-
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>(); // ApplicationUser olduğundan emin olun
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        await SeedRolesAsync(roleManager); // Helper metodu çağır
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the roles.");
+    }
+}
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -101,3 +119,15 @@ app.MapControllerRoute(
 app.MapRazorPages(); // Identity UI için
 
 app.Run();
+async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
+{
+    string[] roleNames = { "Admin", "Teacher", "Student" };
+    foreach (var roleName in roleNames)
+    {
+        if (!await roleManager.RoleExistsAsync(roleName))
+        {
+            // ID'yi Identity sistemi kendi atayacak
+            await roleManager.CreateAsync(new IdentityRole(roleName));
+        }
+    }
+}

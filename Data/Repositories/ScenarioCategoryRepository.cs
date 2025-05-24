@@ -3,6 +3,7 @@ using YetenekPusulasi.Core.Entities;
 using YetenekPusulasi.Core.Interfaces.Repositories;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using YetenekPusulasi.Areas.Identity.Data;
 
 namespace YetenekPusulasi.Data.Repositories
 {
