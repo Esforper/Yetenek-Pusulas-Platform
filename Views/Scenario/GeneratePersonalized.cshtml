@@ -1,0 +1,70 @@
+@model YetenekPusulasi.Models.ScenarioViewModels.StudentProfileInputModel 
+@{
+    ViewData["Title"] = "Kişiselleştirilmiş Senaryo Üret";
+}
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="GeneratePersonalized" method="post"> @* POST metodu kullandığımızı varsayalım *@
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <h4>Öğrenci Tercihleri</h4>
+            <div class="form-group mb-3">
+                <label asp-for="TargetSkillPreference" class="control-label">Tercih Edilen Yetenek</label>
+                <input asp-for="TargetSkillPreference" class="form-control" />
+                <span asp-validation-for="TargetSkillPreference" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="PreferredDifficulty" class="control-label">Tercih Edilen Zorluk (1-5)</label>
+                <input asp-for="PreferredDifficulty" type="number" min="1" max="5" class="form-control" />
+                <span asp-validation-for="PreferredDifficulty" class="text-danger"></span>
+            </div>
+
+            <hr/>
+            <h4>Üretim Stratejisi</h4>
+            <div class="form-group mb-3">
+                <label for="strategyType" class="control-label">Strateji Tipi</label>
+                <select name="strategyType" id="strategyType" class="form-control">
+                    <option value="RuleBased" selected>Kural Tabanlı</option>
+                    <option value="AI">Yapay Zeka Destekli</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Senaryo Üret" class="btn btn-success" />
+                <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* Eğer üretilen senaryo aynı sayfada gösterilecekse, buraya bir bölüm eklenebilir: *@
+@if (ViewBag.GeneratedScenario != null)
+{
+    var generatedScenario = (YetenekPusulasi.Models.ScenarioViewModels.ScenarioViewModel)ViewBag.GeneratedScenario;
+    <hr />
+    <h3>Üretilen Senaryo</h3>
+    <div>
+        <dl class="row">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@generatedScenario.Id</dd>
+            <dt class="col-sm-3">Metin</dt>
+            <dd class="col-sm-9" style="white-space: pre-wrap;">@generatedScenario.Text</dd>
+            <dt class="col-sm-3">Hedef Yetenek</dt>
+            <dd class="col-sm-9">@generatedScenario.TargetSkill</dd>
+            <dt class="col-sm-3">Zorluk</dt>
+            <dd class="col-sm-9">@generatedScenario.DifficultyLevel</dd>
+            <dt class="col-sm-3">Kategori</dt>
+            <dd class="col-sm-9">@generatedScenario.ScenarioCategoryName</dd>
+        </dl>
+    </div>
+}
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

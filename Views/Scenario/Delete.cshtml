@@ -1,19 +1,20 @@
 @model YetenekPusulasi.Models.ScenarioViewModels.ScenarioViewModel
 @{
-    ViewData["Title"] = "Senaryo Detayı";
+    ViewData["Title"] = "Senaryo Sil";
 }
 
 <h1>@ViewData["Title"]</h1>
 
+<h3>Bu senaryoyu silmek istediğinizden emin misiniz?</h3>
 <div>
     <h4>Senaryo ID: @Model.Id</h4>
     <hr />
     <dl class="row">
         <dt class="col-sm-3">
-            Metin
+            Metin (Önizleme)
         </dt>
-        <dd class="col-sm-9" style="white-space: pre-wrap;">
-            @Html.DisplayFor(model => model.Text)
+        <dd class="col-sm-9">
+            @(Model.Text.Length > 150 ? Model.Text.Substring(0, 150) + "..." : Model.Text)
         </dd>
         <dt class="col-sm-3">
             Hedef Yetenek
@@ -22,20 +23,16 @@
             @Html.DisplayFor(model => model.TargetSkill)
         </dd>
         <dt class="col-sm-3">
-            Zorluk Seviyesi
-        </dt>
-        <dd class="col-sm-9">
-            @Html.DisplayFor(model => model.DifficultyLevel)
-        </dd>
-        <dt class="col-sm-3">
             Kategori
         </dt>
         <dd class="col-sm-9">
             @Html.DisplayFor(model => model.ScenarioCategoryName)
         </dd>
     </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Düzenle</a> |
-    <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Sil" class="btn btn-danger" /> |
+        <a asp-action="Index" class="btn btn-secondary">İptal Et</a>
+    </form>
 </div>

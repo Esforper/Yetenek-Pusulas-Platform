@@ -1,0 +1,49 @@
+@model IEnumerable<YetenekPusulasi.Core.Entities.Classroom>
+@{
+    ViewData["Title"] = "Öğretmen Paneli";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<p>
+    <a asp-action="CreateClassroom" class="btn btn-primary">Yeni Sınıf Oluştur</a>
+    <a asp-controller="Scenarios" asp-action="List" class="btn btn-info">Senaryoları Yönet</a>
+</p>
+
+<h3>Sınıflarım</h3>
+@if (Model.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Sınıf Adı</th>
+                <th>Açıklama</th>
+                <th>Katılım Kodu</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var classroom in Model)
+            {
+                <tr>
+                    <td>@classroom.Name</td>
+                    <td>@classroom.Description</td>
+                    <td><strong>@classroom.ParticipationCode</strong></td>
+                    <td>
+                        <a asp-action="ClassroomDetails" asp-route-id="@classroom.Id" class="btn btn-sm btn-outline-primary">Detaylar</a>
+                        @* Edit ve Delete eklenebilir *@
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Henüz oluşturulmuş bir sınıfınız bulunmamaktadır.</p>
+}

@@ -1,0 +1,50 @@
+@model IEnumerable<YetenekPusulasi.Models.ScenarioViewModels.ScenarioViewModel>
+@{
+    ViewData["Title"] = "Senaryolar";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Yeni Senaryo Oluştur</a>
+    <a asp-action="GeneratePersonalized" class="btn btn-info">Kişiselleştirilmiş Senaryo Üret</a>
+</p>
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Metin (Önizleme)</th>
+            <th>Hedef Yetenek</th>
+            <th>Zorluk</th>
+            <th>Kategori</th>
+            <th>İşlemler</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Id)</td>
+                <td>
+                    @(item.Text.Length > 100 ? item.Text.Substring(0, 100) + "..." : item.Text)
+                </td>
+                <td>@Html.DisplayFor(modelItem => item.TargetSkill)</td>
+                <td>@Html.DisplayFor(modelItem => item.DifficultyLevel)</td>
+                <td>@Html.DisplayFor(modelItem => item.ScenarioCategoryName)</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Düzenle</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Detay</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Sil</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h2>Kategoriler</h2>
+<p>
+    <a asp-controller="ScenarioCategoriesMvc" asp-action="Index" class="btn btn-secondary">Kategorileri Yönet</a>
+    @* veya aynı controller içinde Categories action'ı varsa: *@
+    @* <a asp-action="Categories" class="btn btn-secondary">Kategorileri Yönet</a> *@
+</p>

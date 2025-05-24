@@ -1,14 +1,13 @@
-namespace YetenekPusulasi.Core.Entities
+namespace YetenekPusulasi.Core.ValueObjects
 {
-    public class StudentProfile
+    public class StudentProfile // Senaryo kişiselleştirme için basit veri taşıyıcı
     {
-        public int StudentId { get; }
-        public string TargetSkillPreference { get; } // Öğrencinin tercih ettiği yetenek
-        public int PreferredDifficulty { get; }     // Öğrencinin tercih ettiği zorluk
+        public string TargetSkillPreference { get; }
+        public int PreferredDifficulty { get; }
+        // Öğrenciye dair diğer bilgiler eklenebilir (yaş, seviye vb.)
 
-        public StudentProfile(int studentId, string targetSkillPreference, int preferredDifficulty)
+        public StudentProfile(string targetSkillPreference, int preferredDifficulty)
         {
-            StudentId = studentId;
             TargetSkillPreference = targetSkillPreference;
             PreferredDifficulty = preferredDifficulty;
         }

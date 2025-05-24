@@ -2,8 +2,15 @@ namespace YetenekPusulasi.Core.Entities
 {
     public class ScenarioCategory
     {
-        public int Id { get; set; }
+       public int Id { get; set; }
         public string Name { get; set; }
-        // public ICollection<Scenario> Scenarios { get; set; } // Navigation (detaydan kaçınıldı)
+        public string Description { get; set; }
+
+        public virtual ICollection<Scenario> Scenarios { get; set; }
+
+        public ScenarioCategory()
+        {
+            Scenarios = new HashSet<Scenario>();
+        }
     }
 }

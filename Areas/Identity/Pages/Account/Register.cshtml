@@ -11,6 +11,13 @@
         <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
             <h2>Create a new account.</h2>
             <hr />
+            <div class="form-floating mb-3">
+                <select asp-for="Input.UserRole" class="form-select" asp-items="ViewBag.Roles">
+                    <option selected="selected" value="">Rol Seçiniz...</option>
+                </select>
+                <label asp-for="Input.UserRole"></label>
+                <span asp-validation-for="Input.UserRole" class="text-danger"></span>
+            </div>
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
             <div class="form-floating mb-3">
                 <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />

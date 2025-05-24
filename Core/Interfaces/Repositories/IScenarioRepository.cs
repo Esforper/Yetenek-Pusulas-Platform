@@ -8,7 +8,10 @@ namespace YetenekPusulasi.Core.Interfaces.Repositories
     {
         Task<Scenario> GetByIdAsync(int id);
         Task<IEnumerable<Scenario>> GetAllAsync();
+        Task<IEnumerable<Scenario>> GetByCategoryIdAsync(int categoryId);
         Task AddAsync(Scenario scenario);
-        // UpdateAsync ve DeleteAsync da burada olurdu, öz olması için çıkarıldı.
+        Task UpdateAsync(Scenario scenario);
+        Task DeleteAsync(int id);
+        Task<bool> ExistsAsync(int id);
     }
 }

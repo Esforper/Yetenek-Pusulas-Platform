@@ -29,13 +29,22 @@ namespace YetenekPusulasi.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        // Areas/Identity/Pages/Account/Register.cshtml.cs (InputModel içine)
+        [Required]
+        [Display(Name = "Kullanıcı Rolü")]
+        public string UserRole { get; set; }
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
+            
             IUserStore<IdentityUser> userStore,
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender),
+            RoleManager<IdentityRole> roleManager)
+
+            
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -43,6 +52,7 @@ namespace YetenekPusulasi.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _roleManager = roleManager;
         }
 
         /// <summary>
@@ -103,7 +113,8 @@ namespace YetenekPusulasi.Areas.Identity.Pages.Account
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            ViewData["Roles"] = new SelectList(_roleManager.Roles.Where(r => r.Name == "Teacher" || r.Name == "Student").ToList(), "Name", "Name");
+    ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)

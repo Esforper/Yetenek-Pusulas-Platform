@@ -1,8 +1,14 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Yetenek Pusulası'na Hoş Geldiniz!";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Yetenek Pusulası</h1>
+    <p class="lead">Öğrencilerin potansiyelini keşfedin, yeteneklerini analiz edin ve geleceğe hazırlayın!</p>
+    <hr />
+    <p>Bu platform, öğrencilerin çeşitli senaryolar aracılığıyla bilişsel ve kişisel becerilerini değerlendirmenize yardımcı olur.</p>
+    <div>
+        <a class="btn btn-primary btn-lg m-2" asp-area="Identity" asp-page="/Account/Login">Giriş Yap</a>
+        <a class="btn btn-success btn-lg m-2" asp-area="Identity" asp-page="/Account/Register">Kayıt Ol</a>
+    </div>
 </div>

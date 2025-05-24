@@ -1,0 +1,50 @@
+@model YetenekPusulasi.Models.ScenarioViewModels.ScenarioCreateViewModel
+@{
+    ViewData["Title"] = "Yeni Senaryo Oluştur";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Text" class="control-label"></label>
+                <textarea asp-for="Text" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="Text" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="TargetSkill" class="control-label"></label>
+                <input asp-for="TargetSkill" class="form-control" />
+                <span asp-validation-for="TargetSkill" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="DifficultyLevel" class="control-label"></label>
+                <input asp-for="DifficultyLevel" type="number" min="1" max="5" class="form-control" />
+                <span asp-validation-for="DifficultyLevel" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="ScenarioCategoryId" class="control-label">Kategori</label>
+                <select asp-for="ScenarioCategoryId" class="form-control" asp-items="ViewBag.ScenarioCategoryId">
+                    <option value="">-- Kategori Seçin --</option>
+                </select>
+                <span asp-validation-for="ScenarioCategoryId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Oluştur" class="btn btn-success" />
+                <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -15,7 +15,18 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        return View();
+        if (User.Identity.IsAuthenticated) // Eğer kullanıcı giriş yapmışsa dashboard'a yönlendir
+            {
+                if (User.IsInRole("Teacher"))
+                {
+                    return RedirectToAction("Dashboard", "Teacher");
+                }
+                else if (User.IsInRole("Student"))
+                {
+                    return RedirectToAction("Dashboard", "Student");
+                }
+            }
+            return View(); // Views/Home/Index.cshtml (Tanıtım içeriği burada olacak)
     }
 
     public IActionResult Privacy()
