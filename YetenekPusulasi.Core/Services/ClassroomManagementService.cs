@@ -6,24 +6,43 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 namespace YetenekPusulasi.Core.Services
 {
     public class ClassroomManagementService
     {
         private readonly IClassroomRepository _classroomRepository;
-        private readonly IRepository<ApplicationUser> _userRepository; // Öğrenci bulmak için
-        private readonly List<IClassroomObserver> _observers = new List<IClassroomObserver>();
+        private readonly IRepository<ApplicationUser> _userRepository;
+        private readonly IEnumerable<IClassroomObserver> _observers;
 
-        public ClassroomManagementService(IClassroomRepository classroomRepository, IRepository<ApplicationUser> userRepository)
+        public ClassroomManagementService(
+            IClassroomRepository classroomRepository,
+            IRepository<ApplicationUser> userRepository,
+            IEnumerable<IClassroomObserver> observers)
         {
             _classroomRepository = classroomRepository;
             _userRepository = userRepository;
+            _observers = observers ?? new List<IClassroomObserver>();
         }
-        public void Subscribe(IClassroomObserver observer) => _observers.Add(observer);
-        public void Unsubscribe(IClassroomObserver observer) => _observers.Remove(observer);
 
-        private void NotifyClassroomCreated(Classroom classroom) => _observers.ForEach(o => o.OnClassroomCreated(classroom));
-        private void NotifyStudentJoined(Classroom classroom, ApplicationUser student) => _observers.ForEach(o => o.OnStudentJoined(classroom, student));
+        public void Subscribe(IClassroomObserver observer) => _observers.ToList().Add(observer);
+        public void Unsubscribe(IClassroomObserver observer) => _observers.ToList().Remove(observer);
+
+        private void NotifyClassroomCreated(Classroom classroom)
+        {
+            foreach (var observer in _observers)
+            {
+                observer.OnClassroomCreated(classroom);
+            }
+        }
+
+        private void NotifyStudentJoined(Classroom classroom, ApplicationUser student)
+        {
+            foreach (var observer in _observers)
+            {
+                observer.OnStudentJoined(classroom, student);
+            }
+        }
 
         public async Task<Classroom> CreateClassroomAsync(string name, string teacherId)
         {
@@ -53,32 +72,10 @@ namespace YetenekPusulasi.Core.Services
             NotifyStudentJoined(classroom, student);
             return true;
         }
-        private readonly IEnumerable<IClassroomObserver> _observers; // IEnumerable olarak al
 
-        public ClassroomManagementService(
-        IClassroomRepository classroomRepository,
-        IRepository<ApplicationUser> userRepository, // veya IUserRepository
-        IEnumerable<IClassroomObserver> observers) // DI ile tüm observer'lar gelir
-    {
-        _classroomRepository = classroomRepository;
-        _userRepository = userRepository;
-        _observers = observers ?? new List<IClassroomObserver>(); // Null gelirse boş liste
-    }
-    private void NotifyClassroomCreated(Classroom classroom)
-    {
-        foreach (var observer in _observers)
+        public async Task<Classroom?> GetByParticipationCodeAsync(string code)
         {
-            observer.OnClassroomCreated(classroom);
+            return await _classroomRepository.GetByParticipationCodeAsync(code);
         }
-    }
-    private void NotifyStudentJoined(Classroom classroom, ApplicationUser student)
-    {
-        foreach (var observer in _observers)
-        {
-            observer.OnStudentJoined(classroom, student);
-        }
-    }
-    // ... (diğer metotlar aynı)
-}
     }
 }
