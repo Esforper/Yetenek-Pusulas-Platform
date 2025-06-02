@@ -167,7 +167,6 @@ app.MapRazorPages(); // Identity UI Razor Pages için bu route EKLENMELİ
 
 app.Run();
 
-
 // --- Yardımcı Seed Metotları (Program.cs sonuna veya ayrı bir static sınıfa) ---
 async Task SeedDefaultRolesAsync(RoleManager<IdentityRole> roleManager)
 {
