@@ -1,19 +1,18 @@
-// Program.cs (kısaltılmış, sadece eklenenler)
-using YetenekPusulasi.Core.Interfaces.Repositories;
-using YetenekPusulasi.Core.Interfaces.Strategies;
+
 using YetenekPusulasi.Core.Interfaces.Services;
 using YetenekPusulasi.Core.Services;
-using YetenekPusulasi.Core.Strategies;
 using YetenekPusulasi.Data; // ApplicationDbContext için
-using YetenekPusulasi.Data.Repositories;
 using Microsoft.EntityFrameworkCore; // EF Core için
 using Microsoft.AspNetCore.Identity.Data;
 using YetenekPusulasi.Models;
 using Microsoft.AspNetCore.Identity; // Identity için
+using YetenekPusulasi.Core.Factories;
 // using Microsoft.AspNetCore.Authentication.JwtBearer; // API için JWT kullanacaksanız
 // using Microsoft.IdentityModel.Tokens; // JWT için
 // using System.Text; // JWT için
-using YetenekPusulasi.Core.Interfaces.Repositories;
+using YetenekPusulasi.Core.Services;
+using YetenekPusulasi.Core.Events;
+using YetenekPusulasi.Core.Observers;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,53 +28,39 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddEntityFrameworkStores<YetenekPusulasi.Areas.Identity.Data.ApplicationDbContext>();
 
 builder.Services.AddControllersWithViews(); // Eğer MVC View'ları da kullanacaksanız
-// builder.Services.AddRazorPages(); // Eğer Razor Pages kullanacaksanız
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
-// --- Bizim Eklediğimiz Servisler ---
-// Repository'ler
-builder.Services.AddScoped<IScenarioRepository, ScenarioRepository>();
-builder.Services.AddScoped<IScenarioCategoryRepository, ScenarioCategoryRepository>();
-builder.Services.AddScoped<YetenekPusulasi.Core.Interfaces.Services.IScenarioService, YetenekPusulasi.Core.Services.ScenarioService>();
-// Stratejiler (tümünü kaydedip Service içinde seçiyoruz)
-builder.Services.AddScoped<RuleBasedScenarioStrategy>(); // Somut tip olarak kaydet
-builder.Services.AddScoped<AIModelScenarioStrategy>();   // Somut tip olarak kaydet
-// IEnumerable<IScenarioGenerationStrategy> olarak enjekte etmek için:
-builder.Services.AddScoped<IScenarioGenerationStrategy, RuleBasedScenarioStrategy>(); // Biri IScenarioGenerationStrategy olarak kaydedilmeli
-builder.Services.AddScoped<IScenarioGenerationStrategy, AIModelScenarioStrategy>();   // Diğeri de IScenarioGenerationStrategy olarak kaydedilmeli
-// Not: Aynı arayüz için birden fazla implementasyon kaydettiğinizde,
-// ScenarioService'in constructor'ında IEnumerable<IScenarioGenerationStrategy> alarak hepsini enjekte edebilirsiniz.
 
-// Servis Katmanı
+
+/// BU KISIM OBSERVER DESENİ İÇİN EKLENDİ
+/// ÖĞRENCİ GİRİŞ YAPTIKTAN SONRA ÖĞRETMENE BİLDİRİM GÖNDERMEK İÇİN
+/// 
+
+// ClassroomService kaydınız zaten olmalı:
+// builder.Services.AddScoped<IClassroomService, ClassroomService>();
+
+// Notification Servisi
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
+// Observer ve Notifier
+builder.Services.AddScoped<StudentJoinedClassroomNotifier>(); // Veya AddSingleton
+
+// Observer implementasyonlarını kaydet
+builder.Services.AddScoped<IStudentJoinedObserver, LogStudentJoinObserver>();
+builder.Services.AddScoped<IStudentJoinedObserver, TeacherNotificationObserver>();
+
+
+
+
+/// ScenarioService ve Factory için
+/// Factory Deseni Kullanıldı.
+/// SenerioService, ScenarioFactory ve Observer'ı ekliyoruz
 builder.Services.AddScoped<IScenarioService, ScenarioService>();
+builder.Services.AddScoped<ScenarioFactory>(); // Factory'yi Scoped olarak kaydediyoruz.
 
-// --- API için JWT Authentication (Opsiyonel) ---
-/*
-builder.Services.AddAuthentication(options => {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options => {
-    options.SaveToken = true;
-    options.RequireHttpsMetadata = false; // Development için false, production için true
-    options.TokenValidationParameters = new TokenValidationParameters()
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidAudience = builder.Configuration["JWT:ValidAudience"],
-        ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
-    };
-});
-*/
-// appsettings.json'a JWT ayarları eklenmeli:
-/*
-"JWT": {
-  "ValidAudience": "http://localhost:yourport",
-  "ValidIssuer": "http://localhost:yourport",
-  "Secret": "THIS IS USED TO SIGN AND VERIFY JWT TOKENS, REPLACE IT WITH YOUR OWN SECRET" // Güçlü bir anahtar olmalı
-}
-*/
+
+
+
 
 
 var app = builder.Build();

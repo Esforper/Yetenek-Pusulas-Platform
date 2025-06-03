@@ -1,26 +1,18 @@
 // Core/Interfaces/Services/IScenarioService.cs
-using YetenekPusulasi.Core.Entities;
-using YetenekPusulasi.Core.ValueObjects;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using YetenekPusulasi.Core.Entities;
 
 namespace YetenekPusulasi.Core.Interfaces.Services
 {
     public interface IScenarioService
     {
-        Task<Scenario> GetScenarioByIdAsync(int id);
-        Task<IEnumerable<Scenario>> GetAllScenariosAsync();
-        Task<Scenario> CreateScenarioAsync(Scenario scenario); // Manuel oluşturma
-        Task UpdateScenarioAsync(Scenario scenario);
-        Task DeleteScenarioAsync(int id);
-
-        Task<ScenarioCategory> GetCategoryByIdAsync(int id);
-        Task<IEnumerable<ScenarioCategory>> GetAllCategoriesAsync();
-        Task<ScenarioCategory> CreateCategoryAsync(ScenarioCategory category);
-        Task UpdateCategoryAsync(ScenarioCategory category);
-        Task DeleteCategoryAsync(int id);
-
-        Task<Scenario> GeneratePersonalizedScenarioAsync(StudentProfile profile, string strategyType);
-        // void SetScenarioGenerationStrategy(IScenarioGenerationStrategy strategy); // Eğer service içinde strateji set edilecekse
+        // ScenarioCreateDto gibi bir DTO kullanılabilir veya doğrudan parametreler
+        Task<Scenario?> CreateScenarioAsync(string title, string description, ScenarioType type, string teacherId, int classroomId);
+        Task<Scenario?> GetScenarioByIdAsync(int scenarioId);
+        Task<IEnumerable<Scenario>> GetScenariosByClassroomAsync(int classroomId);
+        Task<IEnumerable<Scenario>> GetScenariosByTeacherAsync(string teacherId); // Öğretmenin oluşturduğu tüm senaryolar
+        // Task<Scenario> UpdateScenarioAsync(Scenario scenario); // Opsiyonel
+        // Task<bool> DeleteScenarioAsync(int scenarioId); // Opsiyonel
     }
 }

@@ -1,0 +1,44 @@
+@* Views/Teacher/CreateScenarioForClassroom.cshtml *@
+@model YetenekPusulasi.WebApp.Models.ScenarioViewModels.CreateScenarioViewModel
+
+@{
+    ViewData["Title"] = $"'{Model.ClassroomName}' Sınıfına Yeni Senaryo Ekle";
+}
+
+<h4>@ViewData["Title"]</h4>
+<hr />
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="CreateScenarioForClassroom">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ClassroomId" />
+            <input type="hidden" asp-for="ClassroomName" /> @* Postback'te korumak için *@
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Type" class="form-label"></label>
+                <select asp-for="Type" asp-items="Model.ScenarioTypes" class="form-select">
+                    <option value="">-- Tür Seçin --</option>
+                </select>
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Senaryoyu Oluştur ve Sınıfa Ekle</button>
+                <a asp-action="ClassroomDetails" asp-route-id="@Model.ClassroomId" class="btn btn-secondary">İptal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -8,10 +8,10 @@ namespace YetenekPusulasi.Areas.Identity.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        public DbSet<Scenario> Scenarios { get; set; }
-        public DbSet<ScenarioCategory> ScenarioCategories { get; set; }
         public DbSet<Classroom> Classrooms { get; set; }
         public DbSet<StudentClassroom> StudentClassrooms { get; set; }
+        public DbSet<Notification> Notifications { get; set; } // <<< YENİ EKLEME
+        public DbSet<Scenario> Scenarios { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -22,33 +22,6 @@ namespace YetenekPusulasi.Areas.Identity.Data
         {
             base.OnModelCreating(builder); // Identity tabloları için bu satır ÇOK ÖNEMLİDİR, en başta kalmalı.
 
-            // --- Senaryo ve Kategori İlişkileri ---
-            builder.Entity<Scenario>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Text).IsRequired();
-                entity.Property(e => e.TargetSkill).HasMaxLength(100);
-
-                entity.HasOne(d => d.ScenarioCategory)
-                    .WithMany(p => p.Scenarios)
-                    .HasForeignKey(d => d.ScenarioCategoryId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            builder.Entity<ScenarioCategory>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-
-                // Örnek KATEGORİ verisi (Seed data) - ID'ler sabit olmalı
-                // Eğer kategori ID'leri de dinamikse, bunları da Program.cs'te oluşturmayı düşünebilirsiniz.
-                // Ancak genellikle temel kategoriler sabit ID'lerle seed edilebilir.
-                entity.HasData(
-                    new ScenarioCategory { Id = 1, Name = "Problem Çözme", Description = "Problem çözme yetenekleri." },
-                    new ScenarioCategory { Id = 2, Name = "Empati", Description = "Empati kurma becerileri." },
-                    new ScenarioCategory { Id = 3, Name = "Analitik Düşünme", Description = "Analitik düşünme senaryoları." }
-                );
-            });
 
             // --- Classroom Entity Konfigürasyonu ---
             builder.Entity<Classroom>(entity =>
@@ -84,6 +57,33 @@ namespace YetenekPusulasi.Areas.Identity.Data
 
             // ROLLER İÇİN HasData KISMI TAMAMEN KALDIRILDI.
             // Roller Program.cs veya bir DataSeeder servisi aracılığıyla oluşturulacak.
+
+
+            // Notification için ilişki (opsiyonel ama iyi pratik)
+            builder.Entity<Notification>(entity =>
+            {
+                entity.HasOne(n => n.User)
+                      .WithMany() // ApplicationUser'da Notifications koleksiyonu olmayacaksa (tek yönlü)
+                      .HasForeignKey(n => n.UserId)
+                      .IsRequired()
+                      .OnDelete(DeleteBehavior.Cascade); // Kullanıcı silinirse bildirimleri de sil
+            });
+            
+
+             builder.Entity<Scenario>(entity =>
+            {
+                entity.HasOne(s => s.Teacher)
+                      .WithMany() // ApplicationUser'da Scenarios koleksiyonu olmayacaksa
+                      .HasForeignKey(s => s.TeacherId)
+                      .IsRequired()
+                      .OnDelete(DeleteBehavior.Restrict); // Öğretmen silinirse senaryolar ne olacak? Restrict veya Cascade
+
+                entity.HasOne(s => s.Classroom)
+                      .WithMany() // Classroom'da Scenarios koleksiyonu eklenebilir: .WithMany(c => c.Scenarios)
+                      .HasForeignKey(s => s.ClassroomId)
+                      .IsRequired()
+                      .OnDelete(DeleteBehavior.Cascade); // Sınıf silinirse senaryoları da sil
+            });
         }
     }
 }

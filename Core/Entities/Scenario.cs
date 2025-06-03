@@ -1,17 +1,34 @@
+// Core/Entities/Scenario.cs
+using System;
+using System.Collections.Generic; // ICollection için
+using YetenekPusulasi.Data; // ApplicationUser için
+// using YetenekPusulasi.Core.Entities; // Classroom ve StudentAnswer için (aşağıda tanımlanacak)
+
 namespace YetenekPusulasi.Core.Entities
 {
     public class Scenario
     {
         public int Id { get; set; }
-        public string Text { get; set; }
-        public string TargetSkill { get; set; }
-        public int DifficultyLevel { get; set; } // 1-5
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public ScenarioType Type { get; set; } // Enum türümüz
+        public DateTime CreatedDate { get; set; }
+        public DateTime? LastModifiedDate { get; set; }
 
-        public int ScenarioCategoryId { get; set; }
-        public virtual ScenarioCategory ScenarioCategory { get; set; }
+        // İlişkiler
+        public string TeacherId { get; set; } // Senaryoyu oluşturan öğretmen
+        public virtual ApplicationUser Teacher { get; set; }
 
-        // Kimin oluşturduğu bilgisi eklenebilir (Identity User Id)
-        // public string CreatedByUserId { get; set; }
-        // public virtual ApplicationUser CreatedByUser { get; set; } // Eğer ApplicationUser'ı özelleştirdiyseniz
+        public int ClassroomId { get; set; } // Senaryonun atandığı sınıf
+        public virtual Classroom Classroom { get; set; }
+
+        // Öğrencilerin bu senaryoya verdiği cevaplar (ileride eklenecek)
+        // public virtual ICollection<StudentAnswer> StudentAnswers { get; set; }
+
+        public Scenario()
+        {
+            CreatedDate = DateTime.UtcNow;
+            // StudentAnswers = new HashSet<StudentAnswer>();
+        }
     }
 }

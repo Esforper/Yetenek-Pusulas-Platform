@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using YetenekPusulasi.Models;
+using YetenekPusulasi.Core.Events;
 using YetenekPusulasi.Areas.Identity.Data; // ApplicationUser için
 
 namespace YetenekPusulasi.Core.Services
@@ -14,10 +15,12 @@ namespace YetenekPusulasi.Core.Services
     public class ClassroomService : IClassroomService
     {
         private readonly ApplicationDbContext _context;
+        private readonly StudentJoinedClassroomNotifier _studentJoinedNotifier;
 
-        public ClassroomService(ApplicationDbContext context)
+        public ClassroomService(ApplicationDbContext context, StudentJoinedClassroomNotifier studentJoinedNotifier)
         {
             _context = context;
+            _studentJoinedNotifier = studentJoinedNotifier; // <<< YENİ EKLEME
         }
 
         public async Task<Classroom> CreateClassroomAsync(string name, string description, string teacherId)
@@ -56,6 +59,21 @@ namespace YetenekPusulasi.Core.Services
             };
             _context.StudentClassrooms.Add(studentClassroom);
             await _context.SaveChangesAsync();
+
+
+            // Observer'lara bildirim gönderme
+            if (student is ApplicationUser appUser) // Tip kontrolü ve cast
+            {
+                await _studentJoinedNotifier.NotifyObserversAsync(studentClassroom, appUser, classroom);
+            }
+            else
+            {
+                // Hata loglama veya farklı bir işlem
+                // Bu durumun olmaması beklenir eğer Users DbSet'i doğru konfigüre edilmişse.
+                Console.WriteLine($"Hata: Student ID {studentId} ApplicationUser tipinde değil.");
+            }
+
+
             return true;
         }
         public Task<Classroom> GetClassroomByIdAsync(int classroomId) =>
