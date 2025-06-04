@@ -13,6 +13,9 @@ using YetenekPusulasi.Core.Factories;
 using YetenekPusulasi.Core.Services;
 using YetenekPusulasi.Core.Events;
 using YetenekPusulasi.Core.Observers;
+using YetenekPusulasi.Core.Interfaces.AI;
+using YetenekPusulasi.Infrastructure.AIAdapters;
+using YetenekPusulasi.Core.AIStrategies;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,6 +61,26 @@ builder.Services.AddScoped<IStudentJoinedObserver, TeacherNotificationObserver>(
 builder.Services.AddScoped<IScenarioService, ScenarioService>();
 builder.Services.AddScoped<ScenarioFactory>(); // Factory'yi Scoped olarak kaydediyoruz.
 
+
+
+
+
+// ...
+// AI Adapter'ları
+builder.Services.AddScoped<IAIModelAdapter, OpenAIAdapter>();
+builder.Services.AddScoped<IAIModelAdapter, GoogleGeminiAdapter>();
+// Eklediğiniz her yeni AI adapter için bir satır
+
+// AI Analysis Stratejileri
+builder.Services.AddScoped<IAnalysisStrategy, OpenAIAnalysisStrategy>();
+builder.Services.AddScoped<IAnalysisStrategy, GeminiAnalysisStrategy>();
+// Eklediğiniz her yeni strateji için bir satır
+
+// Ana Analiz Servisi
+builder.Services.AddScoped<IAnalysisService, AnalysisService>();
+
+// IHttpClientFactory (Gerçek API çağrıları için OpenAIAdapter gibi yerlerde gerekecek)
+builder.Services.AddHttpClient(); // Temel AddHttpClient
 
 
 

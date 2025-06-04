@@ -15,6 +15,7 @@ namespace YetenekPusulasi.Areas.Identity.Data // VEYA DbContext'inizin olduğu d
         public DbSet<StudentClassroom> StudentClassrooms { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Scenario> Scenarios { get; set; }
+        public DbSet<AnalysisResult> AnalysisResults { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
