@@ -93,11 +93,10 @@ namespace YetenekPusulasi.WebApp.Controllers // Namespace'inizi kontrol edin
             var viewModel = new ClassroomDetailsViewModel
             {
                 Classroom = classroom,
-                Students = students.ToList(), // ToList() ile IEnumerable'ı List'e çeviriyoruz
-                Scenarios = scenarios.ToList() // ToList() ile IEnumerable'ı List'e çeviriyoruz
+                Students = students.ToList(),
+                Scenarios = scenarios.ToList() // scenarios.ToList() -> List<IScenario> döndürür ve bu IList<IScenario>'ya atanabilir.
             };
-
-            return View(viewModel); // <<< DİKKAT: View'e viewModel gönderiliyor
+            return View(viewModel);
         }
         //----------------------------------------------------//
         // <<< DÜZELTME BİTTİ >>>                             //

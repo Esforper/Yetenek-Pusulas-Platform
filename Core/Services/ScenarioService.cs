@@ -1,13 +1,11 @@
 // Core/Services/ScenarioService.cs
+// ...
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using YetenekPusulasi.Areas.Identity.Data; // DbContext namespace'i
+using YetenekPusulasi.Areas.Identity.Data;
 using YetenekPusulasi.Core.Entities;
-using YetenekPusulasi.Core.Factories; // ScenarioFactory için
-using YetenekPusulasi.Core.Interfaces.Services;
-// using YetenekPusulasi.Core.Events; // ScenarioAssignedToClassNotifier (Observer için sonraki adımda)
+using YetenekPusulasi.Core.Factories;
+using YetenekPusulasi.Core.Interfaces.Entities;
+using YetenekPusulasi.Core.Interfaces.Services; // IScenario için
 
 namespace YetenekPusulasi.Core.Services
 {
@@ -15,65 +13,60 @@ namespace YetenekPusulasi.Core.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly ScenarioFactory _scenarioFactory;
-        // private readonly ScenarioAssignedToClassNotifier _scenarioAssignedNotifier; // Observer için sonra
 
-        public ScenarioService(ApplicationDbContext context, ScenarioFactory scenarioFactory /*, ScenarioAssignedToClassNotifier scenarioAssignedNotifier */)
+        public ScenarioService(ApplicationDbContext context, ScenarioFactory scenarioFactory)
         {
             _context = context;
             _scenarioFactory = scenarioFactory;
-            // _scenarioAssignedNotifier = scenarioAssignedNotifier; // Observer için sonra
         }
 
-        public async Task<Scenario?> CreateScenarioAsync(string title, string description, ScenarioType type, string teacherId, int classroomId)
+        public async Task<IScenario?> CreateScenarioAsync(string title, string description, ScenarioType type, string teacherId, int classroomId)
         {
-            // Sınıfın var olup olmadığını ve öğretmenin o sınıfa yetkili olup olmadığını kontrol etmek iyi bir pratik olur.
             var classroomExists = await _context.Classrooms.AnyAsync(c => c.Id == classroomId && c.TeacherId == teacherId);
             if (!classroomExists)
             {
-                // Hata yönetimi: Sınıf bulunamadı veya öğretmen yetkili değil.
-                // Bir exception fırlatabilir veya null dönebilirsiniz.
-                // Şimdilik null dönelim, Controller'da kontrol edilecek.
                 return null;
             }
 
-            var scenario = _scenarioFactory.Create(title, description, type, teacherId, classroomId);
+            // Factory artık IScenario döndürüyor
+            IScenario scenario = _scenarioFactory.Create(title, description, type, teacherId, classroomId);
 
-            _context.Scenarios.Add(scenario);
-            await _context.SaveChangesAsync();
-
-            // <<< OBSERVER TETİKLEME BURAYA GELECEK (Sonraki Adım) >>>
-            // if (scenario != null)
-            // {
-            //    var classroom = await _context.Classrooms.FindAsync(classroomId); // Notifier için classroom bilgisi
-            //    if(classroom != null)
-            //        await _scenarioAssignedNotifier.NotifyObserversAsync(scenario, classroom);
-            // }
-
-            return scenario;
+            // DbContext'e eklerken somut tipine cast etmemiz gerekebilir veya
+            // DbContext'in abstract tipleri nasıl ele aldığına bağlı.
+            // Genellikle TPH stratejisiyle sorun olmaz.
+            if (scenario is Scenario concreteScenario) // Güvenli cast
+            {
+                _context.Scenarios.Add(concreteScenario); // Scenarios DbSet'i hala DbSet<Scenario>
+                await _context.SaveChangesAsync();
+                return concreteScenario; // veya scenario (IScenario olarak)
+            }
+            return null; // Eğer cast başarısız olursa (beklenmedik durum)
         }
 
-        public async Task<Scenario?> GetScenarioByIdAsync(int scenarioId)
+        public async Task<IScenario?> GetScenarioByIdAsync(int scenarioId)
         {
+            // Scenarios DbSet'i Scenario (abstract) tipinde olduğu için,
+            // EF Core doğru alt tipi getirecektir (TPH sayesinde).
             return await _context.Scenarios
-                .Include(s => s.Teacher) // İsteğe bağlı: Öğretmen bilgisini de getir
-                .Include(s => s.Classroom) // İsteğe bağlı: Sınıf bilgisini de getir
+                .Include(s => s.Teacher)
+                .Include(s => s.Classroom)
                 .FirstOrDefaultAsync(s => s.Id == scenarioId);
         }
 
-        public async Task<IEnumerable<Scenario>> GetScenariosByClassroomAsync(int classroomId)
+        public async Task<IEnumerable<IScenario>> GetScenariosByClassroomAsync(int classroomId)
         {
             return await _context.Scenarios
                 .Where(s => s.ClassroomId == classroomId)
-                .Include(s => s.Teacher) // Oluşturan öğretmeni göster
+                .Include(s => s.Teacher)
                 .OrderByDescending(s => s.CreatedDate)
-                .ToListAsync();
+                .ToListAsync(); // Bu List<Scenario> döndürür, IScenario'ya otomatik cast olur.
         }
 
-        public async Task<IEnumerable<Scenario>> GetScenariosByTeacherAsync(string teacherId)
+        public async Task<IEnumerable<IScenario>> GetScenariosByTeacherAsync(string teacherId)
         {
             return await _context.Scenarios
                 .Where(s => s.TeacherId == teacherId)
-                .Include(s => s.Classroom) // Hangi sınıfa ait olduğunu göster
+                .Include(s => s.Classroom)
                 .OrderByDescending(s => s.CreatedDate)
                 .ToListAsync();
         }

@@ -1,22 +1,17 @@
-// Core/Factories/ScenarioFactory.cs
+// Core/Factories/ScenarioFactory.cs (MEVCUT DOSYAYI GÜNCELLE)
 using System;
 using YetenekPusulasi.Core.Entities;
-using YetenekPusulasi.Data; // ApplicationUser için (teacherId tipi için)
+using YetenekPusulasi.Core.Entities.Scenarios; // Somut senaryo sınıfları için
+using YetenekPusulasi.Core.Interfaces.Entities; // IScenario için
 
 namespace YetenekPusulasi.Core.Factories
 {
     public class ScenarioFactory
     {
-        // Bu factory şimdilik basit olacak. Eğer DbContext'e veya başka servislere ihtiyacı olursa
-        // constructor'a enjekte edilebilir. Örneğin, senaryo türüne göre varsayılan bir
-        // açıklama şablonu veritabanından çekilecekse.
+        public ScenarioFactory() { }
 
-        public ScenarioFactory()
-        {
-            // Şimdilik constructor boş.
-        }
-
-        public Scenario Create(string title, string description, ScenarioType type, string teacherId, int classroomId)
+        // Artık IScenario döndürecek
+        public IScenario Create(string title, string description, ScenarioType type, string teacherId, int classroomId)
         {
             if (string.IsNullOrWhiteSpace(title))
                 throw new ArgumentException("Senaryo başlığı boş olamaz.", nameof(title));
@@ -25,22 +20,44 @@ namespace YetenekPusulasi.Core.Factories
             if (classroomId <= 0)
                 throw new ArgumentException("Geçerli bir Sınıf ID'si belirtilmelidir.", nameof(classroomId));
 
-            var scenario = new Scenario
-            {
-                Title = title,
-                Description = description,
-                Type = type, // Gelen tip doğrudan atanıyor
-                TeacherId = teacherId,
-                ClassroomId = classroomId
-                // CreatedDate zaten Scenario constructor'ında set ediliyor.
-            };
+            IScenario scenario; // IScenario tipinde değişken
 
-            // İPUCU: Senaryo türüne göre burada ek mantıklar eklenebilir.
-            // Örneğin, type ProblemSolving ise Description'a bir ön ek eklenebilir:
-            // if (type == ScenarioType.ProblemSolving && !description.StartsWith("[Problem]:"))
-            // {
-            //     scenario.Description = "[Problem]: " + description;
-            // }
+            switch (type)
+            {
+                case ScenarioType.ProblemSolving:
+                    scenario = new ProblemSolvingScenario();
+                    // ProblemSolvingScenario'ya özgü property'ler burada atanabilir
+                    // ((ProblemSolvingScenario)scenario).ProblemContext = "Varsayılan bağlam";
+                    break;
+                case ScenarioType.DecisionMaking:
+                    scenario = new DecisionMakingScenario();
+                    // ((DecisionMakingScenario)scenario).OptionsProvided.Add("Seçenek A");
+                    break;
+                case ScenarioType.AnalyticalThinking:
+                    scenario = new AnalyticalThinkingScenario(); // Bu sınıfı oluşturduğunuzu varsayıyorum
+                    break;
+                case ScenarioType.EmpathyDevelopment:
+                    scenario = new EmpathyDevelopmentScenario(); // Bu sınıfı oluşturduğunuzu varsayıyorum
+                    break;
+                case ScenarioType.CreativeThinking:
+                    scenario = new CreativeThinkingScenario(); // Bu sınıfı oluşturduğunuzu varsayıyorum
+                    break;
+                case ScenarioType.Undefined:
+                default:
+                    // Belki genel bir senaryo tipi veya hata yönetimi
+                    // Şimdilik tanımsız bir tip için temel bir senaryo (eğer varsa) veya exception
+                    // throw new ArgumentOutOfRangeException(nameof(type), "Desteklenmeyen senaryo türü.");
+                    // Veya en basit haliyle:
+                    scenario = new GenericScenario(type); // Eğer Scenario abstract değilse veya GenericScenario varsa
+                    break;
+            }
+
+            // Ortak property'leri ata
+            scenario.Title = title;
+            scenario.Description = description;
+            // scenario.Type zaten constructor'da veya switch içinde set ediliyor
+            scenario.TeacherId = teacherId;
+            scenario.ClassroomId = classroomId;
 
             return scenario;
         }
