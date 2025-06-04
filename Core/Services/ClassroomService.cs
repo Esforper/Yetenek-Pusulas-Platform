@@ -76,22 +76,54 @@ namespace YetenekPusulasi.Core.Services
 
             return true;
         }
+
+
+        
+
+        public async Task<IEnumerable<Classroom>> GetClassroomsByTeacherAsync(string teacherId)
+        {
+            return await _context.Classrooms
+                .Where(c => c.TeacherId == teacherId)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ApplicationUser>> GetStudentsInClassroomAsync(int classroomId)
+        {
+            return await _context.StudentClassrooms
+                           .Where(sc => sc.ClassroomId == classroomId)
+                           .Select(sc => sc.Student)
+                           .ToListAsync();
+        }
+
+        // YENİ METOT IMPLEMENTASYONU
+        public async Task<IEnumerable<Classroom>> GetClassroomsByStudentAsync(string studentId)
+        {
+            return await _context.StudentClassrooms
+                .Where(sc => sc.StudentId == studentId)
+                .Include(sc => sc.Classroom) // Sınıf bilgilerini de çek
+                    .ThenInclude(c => c.Teacher) // Sınıfın öğretmenini de çek (opsiyonel)
+                .Select(sc => sc.Classroom)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+        }
+
+        // OPSİYONEL YENİ METOT IMPLEMENTASYONU
+        public async Task<bool> IsStudentEnrolledAsync(string studentId, int classroomId)
+        {
+            return await _context.StudentClassrooms
+                .AnyAsync(sc => sc.StudentId == studentId && sc.ClassroomId == classroomId);
+        }
+
+
+
+
+
         public Task<Classroom> GetClassroomByIdAsync(int classroomId) =>
              _context.Classrooms.Include(c => c.Teacher).FirstOrDefaultAsync(c => c.Id == classroomId);
 
         public Task<Classroom> GetClassroomByCodeAsync(string participationCode) =>
             _context.Classrooms.Include(c => c.Teacher).FirstOrDefaultAsync(c => c.ParticipationCode == participationCode);
-
-
-        public async Task<IEnumerable<Classroom>> GetClassroomsByTeacherAsync(string teacherId) =>
-            await _context.Classrooms.Where(c => c.TeacherId == teacherId).ToListAsync();
-
-        public async Task<IEnumerable<ApplicationUser>> GetStudentsInClassroomAsync(int classroomId) =>
-             await _context.StudentClassrooms
-                           .Where(sc => sc.ClassroomId == classroomId)
-                           .Select(sc => sc.Student)
-                           .ToListAsync();
-
 
         private string GenerateUniqueParticipationCode(int length = 6)
         {

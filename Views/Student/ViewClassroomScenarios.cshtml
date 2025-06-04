@@ -1,0 +1,36 @@
+@* Views/Student/ViewClassroomScenarios.cshtml *@
+@model List<YetenekPusulasi.Core.Interfaces.Entities.IScenario> 
+@{
+    ViewData["Title"] = $"'{ViewBag.ClassroomName}' Sınıfı Senaryoları";
+}
+
+<h4>@ViewData["Title"]</h4>
+<hr />
+
+@if (Model.Any())
+{
+    <p>Aşağıda bu sınıfa atanmış senaryoları görebilirsiniz. Bir senaryoyu yapmak için üzerine tıklayın.</p>
+    <div class="list-group">
+        @foreach (var scenario in Model)
+        {
+            <a asp-action="ViewScenario" asp-route-scenarioId="@scenario.Id" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">@scenario.Title</h6>
+                    <small class="text-muted">Tür: @scenario.Type.ToString()</small>
+                </div>
+                <p class="mb-1 text-truncate" style="max-width: 80%;">@scenario.Description</p> @* Uzun açıklamaları kes *@
+                @* İleride: <small class="text-success">Tamamlandı</small> veya <small class="text-warning">Yapılmadı</small> gibi durumlar eklenebilir *@
+            </a>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info" role="alert">
+        Bu sınıfa henüz atanmış bir senaryo bulunmamaktadır.
+    </div>
+}
+
+<div class="mt-3">
+    <a asp-action="Dashboard" class="btn btn-outline-secondary">Öğrenci Paneline Geri Dön</a>
+</div>

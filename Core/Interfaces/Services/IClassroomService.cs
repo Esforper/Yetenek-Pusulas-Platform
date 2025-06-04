@@ -15,5 +15,8 @@ namespace YetenekPusulasi.Core.Interfaces.Services
         Task<bool> AddStudentToClassroomAsync(string studentId, string participationCode);
         Task<IEnumerable<ApplicationUser>> GetStudentsInClassroomAsync(int classroomId);
         // ... diğer metotlar (Update, Delete vb.)
+
+        Task<IEnumerable<Classroom>> GetClassroomsByStudentAsync(string studentId);
+        Task<bool> IsStudentEnrolledAsync(string studentId, int classroomId); // Opsiyonel: Yetki kontrolü için
     }
 }
