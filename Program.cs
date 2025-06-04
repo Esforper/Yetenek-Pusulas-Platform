@@ -16,7 +16,8 @@ using YetenekPusulasi.Core.Observers;
 using YetenekPusulasi.Core.Interfaces.AI;
 using YetenekPusulasi.Infrastructure.AIAdapters;
 using YetenekPusulasi.Core.AIStrategies;
-
+using YetenekPusulasi.Core.Interfaces.Strategies;
+using YetenekPusulasi.Core.Strategies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,6 +82,36 @@ builder.Services.AddScoped<IAnalysisService, AnalysisService>();
 
 // IHttpClientFactory (Gerçek API çağrıları için OpenAIAdapter gibi yerlerde gerekecek)
 builder.Services.AddHttpClient(); // Temel AddHttpClient
+
+
+
+
+
+
+
+// Initial Prompt Generation Strategies
+builder.Services.AddScoped<ManualInitialPromptStrategy>();
+// AIInitialPromptGenerationStrategy, IAIModelAdapter'a bağımlı.
+// Hangi adapter'ı kullanacağını belirtmek için özel bir kayıt gerekebilir veya
+// IAIModelAdapter'ın birden fazla implementasyonu varsa, Strategy'nin constructor'ında
+// spesifik birini alması veya bir "AdapterSelector" kullanması gerekebilir.
+// Şimdilik en basit haliyle kaydedelim, varsayılan bir IAIModelAdapter'ı alacağını varsayalım.
+// Eğer birden fazla IAIModelAdapter varsa ve hangisinin kullanılacağı dinamikse,
+// AIInitialPromptGenerationStrategy'nin kendisi bir IAIModelAdapter factory/selector alabilir.
+// Veya belirli bir AI adapter'ını doğrudan enjekte alabilir:
+// builder.Services.AddScoped<AIInitialPromptGenerationStrategy>(provider =>
+//     new AIInitialPromptGenerationStrategy(
+//         provider.GetRequiredService<OpenAIAdapter>(), // VEYA provider.GetServices<IAIModelAdapter>().FirstOrDefault(a => a.ModelIdentifier == "OpenAI-GPT-Mock")
+//         provider.GetRequiredService<ILogger<AIInitialPromptGenerationStrategy>>()
+//     )
+// );
+// Şimdilik daha genel bir kayıt yapalım, IAIModelAdapter'ın tek bir instance'ı olduğunu varsayalım
+// veya AIInitialPromptGenerationStrategy'nin constructor'ı IEnumerable<IAIModelAdapter> alıp içinden seçebilir.
+// En temizi, AIInitialPromptGenerationStrategy'nin constructor'ına IAIModelAdapter alması ve DI'nın bunu çözmesi.
+builder.Services.AddScoped<AIInitialPromptGenerationStrategy>();
+
+
+
 
 
 

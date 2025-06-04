@@ -5,17 +5,28 @@
 }
 
 <h4>Senaryo: @Model.Title</h4>
+@if (Model.WasInitialPromptAIGenerated)
+{
+    <small class="text-muted d-block mb-2">(Bu başlangıç metni yapay zeka tarafından sizin için özel olarak oluşturulmuştur)</small>
+}
 <hr />
+
+@* BAŞLANGIÇ PROMPT'U GÖSTERİLİYOR *@
+@if (!string.IsNullOrWhiteSpace(Model.InitialPrompt))
+{
+    <div class="alert alert-light mb-3" role="alert">
+        <h5 class="alert-heading">Başlangıç</h5>
+        <p>@Html.Raw(Model.InitialPrompt.Replace("\n", "<br />"))</p> @* Satır sonlarını <br>'ye çevir *@
+    </div>
+}
 
 <div>
     <dl class="row">
         <dt class="col-sm-2">Senaryo Türü</dt>
         <dd class="col-sm-10">@Model.Type.ToString()</dd>
 
-        <dt class="col-sm-2">Açıklama</dt>
+        <dt class="col-sm-2">Asıl Senaryo Açıklaması</dt>
         <dd class="col-sm-10">
-            @* Eğer Strategy deseni ile HTML geliyorsa: @Html.Raw(ViewBag.ScenarioDisplayHtml) *@
-            @* Şimdilik basitçe açıklamayı gösterelim *@
             <p>@Model.Description</p>
         </dd>
     </dl>

@@ -20,6 +20,10 @@ namespace YetenekPusulasi.Core.Interfaces.Entities
         int ClassroomId { get; set; }
         Classroom Classroom { get; set; }
 
+
+        string? InitialPrompt { get; set; } // Öğrencinin göreceği başlangıç prompt'u
+        bool WasInitialPromptAIGenerated { get; set; } // Bu prompt AI tarafından mı üretildi?
+
         // Her senaryo türünün kendine özgü bir sistem prompt'u döndürmesini sağlayacak metot
         string GetSystemPrompt();
 

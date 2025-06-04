@@ -41,5 +41,13 @@ namespace YetenekPusulasi.WebApp.Models.ScenarioViewModels // Namespace'i projen
                                     Text = e.ToString() // Enum ismini gösterir, daha kullanıcı dostu isimler için bir helper metot yazılabilir.
                                 }).ToList();
         }
+
+
+        [Display(Name = "Özel Başlangıç Metni (Opsiyonel)")]
+        [DataType(DataType.MultilineText)]
+        public string? TeacherProvidedInitialPrompt { get; set; }
+
+        [Display(Name = "Başlangıç Metnini Yapay Zeka Oluştursun Mu?")]
+        public bool GenerateInitialPromptWithAI { get; set; }
     }
 }

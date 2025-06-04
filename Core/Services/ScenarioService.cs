@@ -20,7 +20,8 @@ namespace YetenekPusulasi.Core.Services
             _scenarioFactory = scenarioFactory;
         }
 
-        public async Task<IScenario?> CreateScenarioAsync(string title, string description, ScenarioType type, string teacherId, int classroomId)
+        public async Task<IScenario?> CreateScenarioAsync(string title, string description, ScenarioType type, string teacherId, int classroomId,
+        string? teacherProvidedInitialPrompt, bool generateInitialPromptWithAI)
         {
             var classroomExists = await _context.Classrooms.AnyAsync(c => c.Id == classroomId && c.TeacherId == teacherId);
             if (!classroomExists)
@@ -29,16 +30,19 @@ namespace YetenekPusulasi.Core.Services
             }
 
             // Factory artık IScenario döndürüyor
-            IScenario scenario = _scenarioFactory.Create(title, description, type, teacherId, classroomId);
+            IScenario scenario = await _scenarioFactory.CreateAsync(
+            title, description, type, teacherId, classroomId,
+            teacherProvidedInitialPrompt, generateInitialPromptWithAI);
 
             // DbContext'e eklerken somut tipine cast etmemiz gerekebilir veya
             // DbContext'in abstract tipleri nasıl ele aldığına bağlı.
             // Genellikle TPH stratejisiyle sorun olmaz.
-            if (scenario is Scenario concreteScenario) // Güvenli cast
+            if (scenario is Scenario concreteScenario)
             {
-                _context.Scenarios.Add(concreteScenario); // Scenarios DbSet'i hala DbSet<Scenario>
+                _context.Scenarios.Add(concreteScenario);
                 await _context.SaveChangesAsync();
-                return concreteScenario; // veya scenario (IScenario olarak)
+                // Observer tetikleme burada olabilir
+                return concreteScenario;
             }
             return null; // Eğer cast başarısız olursa (beklenmedik durum)
         }

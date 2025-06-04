@@ -11,6 +11,8 @@ namespace YetenekPusulasi.Core.Entities
         public string Title { get; set; }
         public string Description { get; set; }
         public ScenarioType Type { get; set; } // Type artık constructor'da veya alt sınıfta set edilecek
+        public string? InitialPrompt { get; set; } // Implementasyon
+        public bool WasInitialPromptAIGenerated { get; set; } // Implementasyon
         public DateTime CreatedDate { get; set; }
         public DateTime? LastModifiedDate { get; set; }
 
@@ -24,6 +26,7 @@ namespace YetenekPusulasi.Core.Entities
         {
             CreatedDate = DateTime.UtcNow;
             Type = type;
+            WasInitialPromptAIGenerated = false;
         }
 
         // Abstract metot, alt sınıflar tarafından implemente edilmek zorunda

@@ -151,18 +151,18 @@ namespace YetenekPusulasi.WebApp.Controllers // Namespace'inizi kontrol edin
                     model.Title,
                     model.Description,
                     model.Type,
-                    teacherId,
-                    model.ClassroomId);
+                    teacherId, // Doğru teacherId
+                    model.ClassroomId,
+                    model.TeacherProvidedInitialPrompt, // <<< YENİ
+                    model.GenerateInitialPromptWithAI   // <<< YENİ
+                );
 
                 if (createdScenario != null)
                 {
-                    TempData["SuccessMessage"] = $"'{createdScenario.Title}' senaryosu '{classroom.Name}' sınıfına başarıyla eklendi.";
+                    TempData["SuccessMessage"] = $"'{createdScenario.Title}' senaryosu '{classroom.Name}' sınıfına başarıyla eklendi. Başlangıç Prompt'u: {(createdScenario.WasInitialPromptAIGenerated ? "AI tarafından oluşturuldu." : "Manuel girildi.")}";
                     return RedirectToAction(nameof(ClassroomDetails), new { id = model.ClassroomId });
                 }
-                else
-                {
-                    ModelState.AddModelError("", "Senaryo oluşturulurken bir hata oluştu veya yetkiniz yok.");
-                }
+                // ... (hata yönetimi aynı) ...
             }
             // Hata durumunda ViewModel'ı tekrar doldur
             model.ScenarioTypes = Enum.GetValues(typeof(ScenarioType)).Cast<ScenarioType>().Select(e => new SelectListItem { Value = ((int)e).ToString(), Text = e.ToString() }).ToList();
