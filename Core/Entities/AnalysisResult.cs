@@ -20,6 +20,7 @@ namespace YetenekPusulasi.Core.Entities
         public string? RawAiResponse { get; set; } // AI'dan gelen ham cevap (debug/log için)
         public DateTime AnalysisDate { get; set; }
         public string? ErrorMessage { get; set; } // Analiz sırasında bir hata oluştuysa
+        public virtual StudentAnswer StudentAnswer { get; set; }
 
         public AnalysisResult()
         {

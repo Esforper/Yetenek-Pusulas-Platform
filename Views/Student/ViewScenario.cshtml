@@ -32,24 +32,27 @@
     </dl>
 </div>
 
-@* --- CEVAP YAZMA ALANI BURAYA GELECEK (SONRAKİ ADIM) --- *@
 <div class="mt-4 card">
     <div class="card-header">
         Cevabınız
     </div>
     <div class="card-body">
-        <form asp-action="SubmitAnswer" asp-controller="Student" method="post"> @* SubmitAnswer action'ı sonra eklenecek *@
-            <input type="hidden" name="scenarioId" value="@Model.Id" />
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        @* TODO: Öğrenci bu senaryoya daha önce cevap verdiyse, formu gösterme veya farklı bir mesaj göster. *@
+        <form asp-action="SubmitAnswer" asp-controller="Student" method="post">
+            <input type="hidden" name="ScenarioId" value="@Model.Id" /> @* ViewModel'daki property adı ScenarioId olacak *@
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div> @* Sadece model seviyesi hatalar *@
+            
             <div class="mb-3">
-                <textarea name="answerText" class="form-control" rows="8" placeholder="Senaryoya cevabınızı buraya yazınız..."></textarea>
-                @* Validation mesajı için span eklenebilir *@
+                <label for="AnswerText" class="form-label visually-hidden">Cevabınız</label>
+                <textarea name="AnswerText" id="AnswerText" class="form-control" rows="8" placeholder="Senaryoya cevabınızı buraya yazınız..." required minlength="10"></textarea>
+                @* ASP.NET Core MVC'de validation-for tag helper'ı kullanmak daha iyi olurdu eğer tam bir ViewModel'e bind ediyorsak *@
+                @* <span asp-validation-for="AnswerText" class="text-danger"></span> *@
+                <div class="invalid-feedback">Lütfen en az 10 karakterlik bir cevap girin.</div> @* Basit HTML5 validasyonu için *@
             </div>
-            <button type="submit" class="btn btn-primary" disabled>Cevabı Gönder (Henüz Aktif Değil)</button>
+            <button type="submit" class="btn btn-primary">Cevabı Gönder ve Analiz Et</button>
         </form>
     </div>
 </div>
-@* --- CEVAP YAZMA ALANI BİTTİ --- *@
 
 
 <div class="mt-3">

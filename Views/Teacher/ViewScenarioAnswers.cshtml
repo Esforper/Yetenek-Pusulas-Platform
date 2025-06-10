@@ -1,0 +1,99 @@
+@* Views/Teacher/ViewScenarioAnswers.cshtml *@
+@model List<YetenekPusulasi.Core.Entities.StudentAnswer>
+
+@{
+    ViewData["Title"] = $"'{ViewBag.ScenarioTitle}' Senaryosu Cevapları";
+    var scenarioId = ViewBag.ScenarioId;
+}
+
+<h4>@ViewData["Title"]</h4>
+<hr />
+
+@if (Model.Any())
+{
+    <p>Bu senaryoya öğrenciler tarafından verilen cevaplar aşağıdadır. Analiz detayını görmek için "Analizi Gör" linkine tıklayınız.</p>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Öğrenci</th>
+                <th>Cevap Tarihi</th>
+                <th>Cevap (Kısa Önizleme)</th>
+                <th>Analiz Durumu</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var answer in Model)
+            {
+                <tr>
+                    <td>@(answer.Student?.UserName ?? "Bilinmeyen")</td>
+                    <td>@answer.SubmissionDate.ToString("g")</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(answer.AnswerText))
+                        {
+                            @(answer.AnswerText.Length > 100 ? answer.AnswerText.Substring(0, 100) + "..." : answer.AnswerText)
+                        }
+                        else
+                        {
+                            <em>Cevap boş.</em>
+                        }
+                    </td>
+                    <td>
+                        @if (answer.AnalysisResult != null)
+                        {
+                            if (string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
+                            {
+                                <span class="badge bg-success">Analiz Edildi</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger" title="@answer.AnalysisResult.ErrorMessage">Analiz Hatası</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">Analiz Bekleniyor/Yok</span>
+                        }
+                    </td>
+                    <td>
+                        @if (answer.AnalysisResult != null && string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
+                        {
+                            <a asp-action="ViewStudentAnswerAnalysis" asp-controller="Teacher" asp-route-studentAnswerId="@answer.Id" class="btn btn-sm btn-primary">
+                                Analizi Gör
+                            </a>
+                        }
+                        else if (answer.AnalysisResult != null && !string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
+                        {
+                             <a asp-action="ViewStudentAnswerAnalysis" asp-controller="Teacher" asp-route-studentAnswerId="@answer.Id" class="btn btn-sm btn-danger" title="Hatalı Analizi Gör">
+                                Hatalı Analizi Gör
+                            </a>
+                            @* TODO: Belki "Tekrar Analiz Et" butonu eklenebilir *@
+                        }
+                        else
+                        {
+                            @* Cevap var ama analizi yoksa, belki buradan manuel analiz tetikleme butonu eklenebilir *@
+                            <span class="text-muted">Analiz Yok</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-info" role="alert">
+        Bu senaryoya henüz hiçbir öğrenci cevap vermemiştir.
+    </div>
+}
+
+<div class="mt-3">
+    @if (Model.FirstOrDefault()?.Scenario?.ClassroomId != null)
+    {
+        <a asp-action="ClassroomDetails" asp-route-id="@Model.FirstOrDefault()?.Scenario.ClassroomId" class="btn btn-outline-secondary">Sınıf Detaylarına Geri Dön</a>
+    }
+    else
+    {
+         <a asp-action="Dashboard" class="btn btn-outline-secondary">Öğretmen Paneline Geri Dön</a>
+    }
+</div>

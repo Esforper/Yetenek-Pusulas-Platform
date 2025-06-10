@@ -1,0 +1,75 @@
+@* Views/Student/ViewAnalysisResult.cshtml *@
+@model YetenekPusulasi.Core.Entities.AnalysisResult
+
+@{
+    ViewData["Title"] = "Cevap Analiz Sonucunuz";
+    var scenarioTitle = Model.StudentAnswer?.Scenario?.Title ?? "Bilinmeyen Senaryo";
+    var studentAnswerText = Model.StudentAnswer?.AnswerText ?? "Cevap metni bulunamadı.";
+}
+
+<h4>"@scenarioTitle" Senaryosu İçin Analiz Sonucunuz</h4>
+<hr />
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        <strong>Analiz Hatası:</strong> @Model.ErrorMessage
+    </div>
+}
+
+<div class="card mb-3">
+    <div class="card-header">Senaryo ve Verdiğiniz Cevap</div>
+    <div class="card-body">
+        <h5 class="card-title">Senaryo: @scenarioTitle</h5>
+        <p class="card-text"><em>@Model.StudentAnswer?.Scenario?.Description</em></p>
+        <hr>
+        <h6 class="card-subtitle mb-2 text-muted">Verdiğiniz Cevap (@Model.StudentAnswer?.SubmissionDate.ToShortDateString()):</h6>
+        <p class="card-text" style="white-space: pre-wrap;">@studentAnswerText</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">Yapay Zeka Analizi (@Model.AiModelUsed)</div>
+    <div class="card-body">
+        <h5 class="card-title">Özet Değerlendirme</h5>
+        <p class="card-text">@(Model.Summary ?? "Özet bulunamadı.")</p>
+
+        @if (Model.OverallScore.HasValue)
+        {
+            <h6>Genel Skor: <span class="badge bg-info">@Model.OverallScore.Value.ToString("P0")</span></h6>
+        }
+
+        @if (Model.DetectedSkills != null && Model.DetectedSkills.Any())
+        {
+            <h6>Tespit Edilen Yetenekler/Noktalar:</h6>
+            <ul class="list-group list-group-flush">
+                @foreach (var skill in Model.DetectedSkills)
+                {
+                    <li class="list-group-item">@skill</li>
+                }
+            </ul>
+        }
+        
+        @if (!string.IsNullOrEmpty(Model.RawAiResponse) && User.IsInRole("Admin")) // Sadece Admin ham cevabı görsün (opsiyonel)
+        {
+            <div class="mt-3">
+                <small>
+                    <a data-bs-toggle="collapse" href="#rawAiResponseCollapse" role="button" aria-expanded="false" aria-controls="rawAiResponseCollapse">
+                        Ham AI Cevabını Göster/Gizle (Admin)
+                    </a>
+                </small>
+                <div class="collapse" id="rawAiResponseCollapse">
+                    <pre class="bg-light p-2 mt-2" style="max-height: 200px; overflow-y: auto;"><code>@Model.RawAiResponse</code></pre>
+                </div>
+            </div>
+        }
+    </div>
+    <div class="card-footer text-muted">
+        Analiz Tarihi: @Model.AnalysisDate.ToString("g")
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="ViewClassroomScenarios" asp-route-classroomId="@Model.StudentAnswer?.Scenario?.ClassroomId" class="btn btn-outline-secondary">Sınıf Senaryolarına Geri Dön</a>
+    <a asp-action="Dashboard" class="btn btn-info">Öğrenci Paneline Dön</a>
+</div>

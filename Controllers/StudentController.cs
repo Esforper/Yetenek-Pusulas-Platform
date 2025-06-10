@@ -1,11 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using YetenekPusulasi.Areas.Identity.Data;
+using YetenekPusulasi.Core.Entities;
 using YetenekPusulasi.Core.Interfaces.Services;
 using YetenekPusulasi.Data;
 using YetenekPusulasi.Models.StudentViewModels; // ViewModel'lar için
+using YetenekPusulasi.WebApp.Models.StudentViewModels;
 
 namespace YetenekPusulasi.Controllers
 {
@@ -16,12 +20,23 @@ namespace YetenekPusulasi.Controllers
         // IScenarioService de buraya enjekte edilebilir
         private readonly IScenarioService _scenarioService;
         private readonly UserManager<ApplicationUser> _userManager; // Gerekirse
+        private readonly IAnalysisService _analysisService; // Cevap analizi için
+        private readonly ApplicationDbContext _context; // DbContext, eğer gerekli ise
+        private readonly ILogger<StudentController> _logger; // Loglama için
 
-        public StudentController(IClassroomService classroomService, IScenarioService scenarioService, UserManager<ApplicationUser> userManager)
+        public StudentController(IClassroomService classroomService,
+        IScenarioService scenarioService,
+        UserManager<ApplicationUser> userManager,
+        IAnalysisService analysisService,
+        ApplicationDbContext context,
+        ILogger<StudentController> logger)
         {
             _classroomService = classroomService;
             _scenarioService = scenarioService;
             _userManager = userManager;
+            _analysisService = analysisService;
+            _context = context;
+            _logger = logger;
         }
 
         // Öğrenci Paneli - Katıldığı Sınıfları Listeler
@@ -63,7 +78,7 @@ namespace YetenekPusulasi.Controllers
             }
             return View(model);
         }
-        
+
 
 
         // Bir Sınıftaki Senaryoları Listeleme
@@ -119,6 +134,138 @@ namespace YetenekPusulasi.Controllers
 
             // Şimdilik basitçe senaryoyu gönderelim, View'da temel bilgileri gösteririz.
             return View(scenario); // Views/Student/ViewScenario.cshtml
+        }
+
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitAnswer(SubmitAnswerViewModel model)
+        {
+            var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // ModelState.IsValid kontrolü ve studentId null kontrolü en başta olmalı
+            if (!ModelState.IsValid || string.IsNullOrEmpty(studentId))
+            {
+                if (!ModelState.IsValid)
+                {
+                    TempData["ErrorMessage"] = "Lütfen geçerli bir cevap giriniz.";
+                }
+                if (string.IsNullOrEmpty(studentId))
+                {
+                     _logger.LogWarning("SubmitAnswer POST: Yetkisiz erişim denemesi veya studentId alınamadı.");
+                    return Unauthorized(); // Veya RedirectToAction("Login", "Account")
+                }
+
+                // Hatalı durumda senaryoyu tekrar yükleyip ViewScenario'ya dönmek daha iyi olur.
+                // Ancak bunun için senaryo bilgisini tekrar çekmek ve View'e göndermek gerekir.
+                // Şimdilik basit bir yönlendirme:
+                var scenarioForRedirect = await _scenarioService.GetScenarioByIdAsync(model.ScenarioId);
+                if (scenarioForRedirect != null)
+                {
+                     // ViewScenario'ya model göndermek yerine ViewBag ile veya doğrudan View'e scenario gönderin
+                     // Bu kısım ViewScenario GET metodunuzun nasıl çalıştığına bağlı.
+                     // Eğer ViewScenario GET metodu sadece scenarioId alıyorsa:
+                     return RedirectToAction("ViewScenario", new { scenarioId = model.ScenarioId });
+                }
+                return RedirectToAction("Dashboard"); // Genel bir fallback
+            }
+
+            var scenario = await _scenarioService.GetScenarioByIdAsync(model.ScenarioId);
+            if (scenario == null)
+            {
+                _logger.LogWarning("SubmitAnswer POST: Senaryo bulunamadı. ScenarioId: {ScenarioId}", model.ScenarioId);
+                TempData["ErrorMessage"] = "Senaryo bulunamadı.";
+                return RedirectToAction("Dashboard");
+            }
+
+            var isEnrolled = await _classroomService.IsStudentEnrolledAsync(studentId, scenario.ClassroomId);
+            if (!isEnrolled)
+            {
+                _logger.LogWarning("SubmitAnswer POST: Öğrenci {StudentId} bu senaryonun sınıfına ({ClassroomId}) kayıtlı değil.", studentId, scenario.ClassroomId);
+                TempData["ErrorMessage"] = "Bu senaryoya cevap gönderme yetkiniz yok.";
+                return RedirectToAction("Dashboard");
+            }
+
+            // TODO: Öğrencinin bu senaryoya daha önce cevap verip vermediğini kontrol et.
+            // Eğer verdiyse, yeni cevap mı, güncelleme mi? Veya izin verme.
+            // bool alreadyAnswered = await _context.StudentAnswers.AnyAsync(sa => sa.StudentId == studentId && sa.ScenarioId == model.ScenarioId);
+            // if(alreadyAnswered) { TempData["WarningMessage"] = "Bu senaryoya daha önce cevap verdiniz."; return RedirectToAction(...); }
+
+
+            var studentAnswer = new StudentAnswer // Değişken burada tanımlanıyor
+            {
+                ScenarioId = model.ScenarioId,
+                StudentId = studentId,
+                AnswerText = model.AnswerText,
+                SubmissionDate = DateTime.UtcNow,
+                Scenario = scenario as Scenario // Eğer StudentAnswer.Scenario IScenario değil de Scenario ise cast gerekebilir. IScenario ise direkt scenario atanabilir.
+                                               // Veya Scenario property'sini hiç set etmeyin, sadece ScenarioId yeterli.
+            };
+
+            _context.StudentAnswers.Add(studentAnswer);
+            await _context.SaveChangesAsync(); // Cevap kaydedildi, studentAnswer.Id oluştu.
+
+            _logger.LogInformation("Öğrenci {StudentId}, Senaryo ID {ScenarioId} için cevap kaydetti. Cevap ID: {StudentAnswerId}", studentId, model.ScenarioId, studentAnswer.Id);
+            TempData["SuccessMessage"] = "Cevabınız başarıyla gönderildi. Analiz ediliyor...";
+
+            try // try-catch bloğu burada başlıyor
+            {
+                // studentAnswer ve scenario değişkenleri bu scope'ta erişilebilir.
+                var analysisResult = await _analysisService.AnalyzeStudentAnswerAsync(studentAnswer, scenario, "Google-Gemini-Mock"); // Veya tercih edilen modeli dinamik al
+
+                if (analysisResult != null && string.IsNullOrEmpty(analysisResult.ErrorMessage))
+                {
+                    _logger.LogInformation("Cevap ID {StudentAnswerId} başarıyla analiz edildi. Model: {AIModelUsed}", studentAnswer.Id, analysisResult.AiModelUsed);
+                    TempData["SuccessMessage"] += " Cevabınız başarıyla analiz edildi!";
+                    // Öğrenciyi analiz sonuçlarını görebileceği bir sayfaya yönlendir
+                    return RedirectToAction("ViewAnalysisResult", new { studentAnswerId = studentAnswer.Id }); // Bu action'ı oluşturmanız gerekecek
+                }
+                else
+                {
+                    _logger.LogWarning("Cevap ID {StudentAnswerId} analizinde sorun oluştu. AI Model: {AIModelUsed}, Hata: {ErrorMessage}",
+                        studentAnswer.Id, analysisResult?.AiModelUsed, analysisResult?.ErrorMessage);
+                    TempData["WarningMessage"] = "Cevabınız kaydedildi ancak analiz sırasında bir sorun oluştu: " + (analysisResult?.ErrorMessage ?? "Bilinmeyen hata");
+                }
+            }
+            catch (Exception ex) // catch bloğu burada
+            {
+                _logger.LogError(ex, "Cevap analizi tetiklenirken genel bir hata oluştu. Cevap ID: {AnswerId}", studentAnswer.Id);
+                TempData["WarningMessage"] = "Cevabınız kaydedildi ancak analiz başlatılırken bir hata oluştu.";
+            } // try-catch bloğu burada bitiyor
+
+            // Hata durumunda veya analiz sonrası genel yönlendirme
+            return RedirectToAction("ViewClassroomScenarios", new { classroomId = scenario.ClassroomId });
+        }
+
+        
+
+        // Öğrencinin kendi analiz sonucunu görmesi için action
+        [HttpGet]
+        public async Task<IActionResult> ViewAnalysisResult(int studentAnswerId)
+        {
+            var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(studentId)) return Unauthorized();
+
+            // Analiz sonucunu StudentAnswerId üzerinden çek. StudentAnswer'ı da include et.
+            // StudentAnswer'dan da StudentId'yi kontrol et ki başkasının sonucunu görmesin.
+            var analysis = await _context.AnalysisResults
+                .Include(ar => ar.StudentAnswer) // Eğer AnalysisResult'ta StudentAnswer navigasyon property'si varsa
+                    // .ThenInclude(sa => sa.Scenario) // Ve Scenario'yu da istiyorsak
+                .FirstOrDefaultAsync(ar => ar.StudentAnswerId == studentAnswerId && ar.StudentAnswer.StudentId == studentId);
+
+            if (analysis == null)
+            {
+                TempData["ErrorMessage"] = "Analiz sonucu bulunamadı veya bu sonuca erişim yetkiniz yok.";
+                return RedirectToAction(nameof(Dashboard));
+            }
+            // Eğer AnalysisResult'ta StudentAnswer ve Scenario navigasyonları yoksa,
+            // StudentAnswer'ı ayrıca çekip View'e göndermeniz gerekebilir.
+            // var studentAnswer = await _context.StudentAnswers.Include(sa => sa.Scenario).FirstOrDefaultAsync(sa => sa.Id == studentAnswerId && sa.StudentId == studentId);
+            // ViewBag.StudentAnswer = studentAnswer;
+
+            return View(analysis); // Views/Student/ViewAnalysisResult.cshtml
         }
     }
 }

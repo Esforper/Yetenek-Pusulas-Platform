@@ -14,7 +14,27 @@
     <a asp-action="CreateClassroom" class="btn btn-primary">Yeni Sınıf Oluştur</a>
     <a asp-controller="Scenarios" asp-action="List" class="btn btn-info">Senaryoları Yönet</a>
 </p>
+@* Views/Teacher/Dashboard.cshtml (Örnek) *@
+@* ... *@
 
+<div class="my-3">
+    <h5>Yapay Zeka Bağlantı Testi</h5>
+    <form asp-action="TestGeminiConnection" asp-controller="Teacher" method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-outline-info">Gemini API Bağlantısını Test Et</button>
+    </form>
+</div>
+
+@if (TempData["TestResultMessage"] != null) // Bu TempData'yı Controller'da set etmelisiniz
+{
+    <div class="alert @(TempData["TestResultSuccess"] != null && (bool)TempData["TestResultSuccess"] ? "alert-success" : "alert-danger") mt-2">
+        @TempData["TestResultMessage"]
+    </div>
+}
+@* Veya TempData["SuccessMessage"] ve TempData["ErrorMessage"] zaten _Layout.cshtml'de gösteriliyorsa,
+   Controller'da bunları set etmeniz yeterli. *@
+
+@* ... *@
 <h3>Sınıflarım</h3>
 @if (Model.Any())
 {

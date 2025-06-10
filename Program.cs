@@ -85,7 +85,8 @@ builder.Services.AddHttpClient(); // Temel AddHttpClient
 
 
 
-
+// Program.cs
+builder.Services.AddScoped<IAiConnectionTester, AiConnectionTester>();
 
 
 

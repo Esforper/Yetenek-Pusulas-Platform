@@ -36,6 +36,8 @@ namespace YetenekPusulasi.Core.Services
             IAIModelAdapter? selectedAdapter = null;
             IAnalysisStrategy? selectedStrategy = null;
 
+             _logger.LogInformation("AnalysisService.AnalyzeStudentAnswerAsync called. StudentAnswer ID: {StudentAnswerId}", studentAnswer.Id);
+
             if (!string.IsNullOrEmpty(preferredAiModelIdentifier))
             {
                 selectedAdapter = _aiAdapters.FirstOrDefault(a =>
@@ -51,7 +53,7 @@ namespace YetenekPusulasi.Core.Services
             {
                 // Basit bir varsayılan seçim mantığı (örn: ilk uygun olanı seç)
                 // Veya konfigürasyondan varsayılan bir model oku.
-                selectedAdapter = _aiAdapters.FirstOrDefault(a => a.ModelIdentifier.StartsWith("OpenAI")); // OpenAI'yi varsayalım
+                selectedAdapter = _aiAdapters.FirstOrDefault(a => a.ModelIdentifier.StartsWith("Google-Gemini")); // OpenAI'yi varsayalım
                 if (selectedAdapter != null)
                 {
                     selectedStrategy = _analysisStrategies.FirstOrDefault(s => s.CanHandle(selectedAdapter.ModelIdentifier));
@@ -61,7 +63,7 @@ namespace YetenekPusulasi.Core.Services
             if (selectedAdapter == null || selectedStrategy == null)
             {
                 _logger.LogError("Uygun AI Adapter veya Analysis Strategy bulunamadı. Tercih edilen: {PreferredModel}", preferredAiModelIdentifier);
-                var errorResult = new AnalysisResult { /*StudentAnswerId = studentAnswer.Id,*/ ErrorMessage = "Analiz için uygun AI modeli yapılandırılamadı.", AiModelUsed = "N/A" };
+                var errorResult = new AnalysisResult {StudentAnswerId = studentAnswer.Id, ErrorMessage = "Analiz için uygun AI modeli yapılandırılamadı.", AiModelUsed = "N/A" };
                 // await SaveAnalysisResultAsync(errorResult); // Hatalı sonucu da kaydedebiliriz.
                 return errorResult;
             }
@@ -87,8 +89,19 @@ namespace YetenekPusulasi.Core.Services
 
         private async Task SaveAnalysisResultAsync(AnalysisResult result)
         {
-            _context.AnalysisResults.Add(result);
-            await _context.SaveChangesAsync();
+            _logger.LogInformation("Saving AnalysisResult. StudentAnswerId: {StudentAnswerId}, AI Model: {AIModel}",
+        result.StudentAnswerId, result.AiModelUsed); // <<< LOG EKLEYİN
+
+        if (result.StudentAnswerId == 0) // Eğer Id 0 ise, bu bir sorun
+        {
+            _logger.LogError("Attempting to save AnalysisResult with StudentAnswerId = 0. This will cause a FK violation.");
+            // Burada bir exception fırlatmak veya işlemi durdurmak gerekebilir.
+        }
+
+        _context.AnalysisResults.Add(result);
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("AnalysisResult (ID: {AnalysisResultId}) saved successfully for StudentAnswerId: {StudentAnswerId}",
+            result.Id, result.StudentAnswerId);
         }
     }
 }

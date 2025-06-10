@@ -1,0 +1,71 @@
+@* Views/Teacher/ViewStudentAnswerAnalysis.cshtml *@
+@model YetenekPusulasi.Core.Entities.AnalysisResult
+
+@{
+    var studentUserName = Model.StudentAnswer?.Student?.UserName ?? "Bilinmeyen Öğrenci";
+    var scenarioTitle = Model.StudentAnswer?.Scenario?.Title ?? "Bilinmeyen Senaryo";
+    ViewData["Title"] = $"{studentUserName} - '{scenarioTitle}' Analizi";
+}
+
+<h4>@ViewData["Title"]</h4>
+<hr />
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        <strong>Analiz Hatası:</strong> @Model.ErrorMessage
+    </div>
+}
+
+<div class="card mb-3">
+    <div class="card-header">
+        Öğrenci: <strong>@studentUserName</strong> - Senaryo: <strong>@scenarioTitle</strong>
+    </div>
+    <div class="card-body">
+        <h6 class="card-subtitle mb-2 text-muted">Öğrencinin Cevabı (@Model.StudentAnswer?.SubmissionDate.ToShortDateString()):</h6>
+        <p class="card-text bg-light p-2 rounded" style="white-space: pre-wrap;">@(Model.StudentAnswer?.AnswerText ?? "Cevap metni bulunamadı.")</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-success text-white">Yapay Zeka Analizi (@Model.AiModelUsed)</div>
+    <div class="card-body">
+        <h5 class="card-title">Özet Değerlendirme</h5>
+        <p class="card-text">@(Model.Summary ?? "Özet bulunamadı.")</p>
+
+        @if (Model.OverallScore.HasValue)
+        {
+            <h6>Genel Skor: <span class="badge bg-info">@Model.OverallScore.Value.ToString("P0")</span></h6>
+        }
+
+        @if (Model.DetectedSkills != null && Model.DetectedSkills.Any())
+        {
+            <h6>Tespit Edilen Yetenekler/Noktalar:</h6>
+            <ul class="list-group list-group-flush">
+                @foreach (var skill in Model.DetectedSkills)
+                {
+                    <li class="list-group-item">@skill</li>
+                }
+            </ul>
+        }
+        
+        <div class="mt-3">
+            <small>
+                <a data-bs-toggle="collapse" href="#rawAiResponseCollapseTeacher" role="button" aria-expanded="false" aria-controls="rawAiResponseCollapseTeacher">
+                    Ham AI Cevabını Göster/Gizle
+                </a>
+            </small>
+            <div class="collapse" id="rawAiResponseCollapseTeacher">
+                <pre class="bg-light p-2 mt-2" style="max-height: 200px; overflow-y: auto;"><code>@(Model.RawAiResponse ?? "Ham cevap bulunamadı.")</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer text-muted">
+        Analiz Tarihi: @Model.AnalysisDate.ToString("g")
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="ClassroomDetails" asp-route-id="@Model.StudentAnswer?.Scenario?.ClassroomId" class="btn btn-outline-secondary">Sınıf Detaylarına Geri Dön</a>
+    <a asp-action="Dashboard" class="btn btn-info">Öğretmen Paneline Dön</a>
+</div>

@@ -16,7 +16,7 @@ namespace YetenekPusulasi.Areas.Identity.Data // VEYA DbContext'inizin olduğu d
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Scenario> Scenarios { get; set; }
         public DbSet<AnalysisResult> AnalysisResults { get; set; }
-
+        public DbSet<StudentAnswer> StudentAnswers { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
@@ -113,6 +113,44 @@ namespace YetenekPusulasi.Areas.Identity.Data // VEYA DbContext'inizin olduğu d
                 .HasValue<AnalyticalThinkingScenario>(nameof(AnalyticalThinkingScenario))
                 .HasValue<EmpathyDevelopmentScenario>(nameof(EmpathyDevelopmentScenario))
                 .HasValue<CreativeThinkingScenario>(nameof(CreativeThinkingScenario));
+
+
+            // --- AnalysisResult Entity Konfigürasyonu ---
+             // StudentAnswer için ilişkiler
+            builder.Entity<StudentAnswer>(entity =>
+            {
+                entity.HasOne(sa => sa.Student)
+                    .WithMany() // Bu StudentClassrooms olmamalı, ya boş ya da Student'ta Answers koleksiyonu
+                    .HasForeignKey(sa => sa.StudentId)
+                    .OnDelete(DeleteBehavior.Restrict); // Öğrenci silinirse cevapları ne olacak?
+
+                entity.HasOne(sa => sa.Scenario) // IScenario tipinde olduğu için dikkat
+                    .WithMany() // Scenario'da StudentAnswers koleksiyonu yoksa
+                    .HasForeignKey(sa => sa.ScenarioId)
+                    .OnDelete(DeleteBehavior.Cascade); // Senaryo silinirse cevapları da sil
+
+                // StudentAnswer ve AnalysisResult arasında bire bir ilişki
+                entity.HasOne(sa => sa.AnalysisResult)
+                    .WithOne(ar => ar.StudentAnswer) // AnalysisResult'ta StudentAnswer navigasyonu olmalı
+                    .HasForeignKey<AnalysisResult>(ar => ar.StudentAnswerId); // AnalysisResult'taki FK
+            });
+
+            builder.Entity<AnalysisResult>(entity =>
+            {
+                entity.HasKey(ar => ar.Id); // Primary Key
+
+                // AnalysisResult'ın StudentAnswer ile birebir ilişkisi
+                // StudentAnswerId, AnalysisResult'ta Foreign Key olacak
+                // ve StudentAnswer'ın Id'sine işaret edecek.
+                // StudentAnswer tarafında AnalysisResult nullable (bir cevap henüz analiz edilmemiş olabilir)
+                // AnalysisResult tarafında StudentAnswer zorunlu (bir analiz mutlaka bir cevaba ait olmalı)
+                entity.HasOne(ar => ar.StudentAnswer) // AnalysisResult -> StudentAnswer navigasyonu
+                      .WithOne(sa => sa.AnalysisResult) // StudentAnswer -> AnalysisResult navigasyonu
+                      .HasForeignKey<AnalysisResult>(ar => ar.StudentAnswerId) // FK AnalysisResult'ta
+                      .IsRequired() // Bir analiz sonucu mutlaka bir öğrenci cevabına bağlı olmalı
+                      .OnDelete(DeleteBehavior.Cascade); // Cevap silinirse analiz sonucu da silinsin
+            });
+
 
         }
     }

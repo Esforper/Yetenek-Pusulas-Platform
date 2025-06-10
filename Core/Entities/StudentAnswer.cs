@@ -12,7 +12,7 @@ namespace YetenekPusulasi.Core.Entities
         public DateTime SubmissionDate { get; set; }
 
         public int ScenarioId { get; set; }
-        public virtual IScenario Scenario { get; set; } // Artık IScenario kullanıyoruz
+        public virtual Scenario Scenario { get; set; }
 
         public string StudentId { get; set; }
         public virtual ApplicationUser Student { get; set; }
