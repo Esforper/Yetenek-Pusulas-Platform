@@ -1,64 +1,106 @@
 @* Views/Student/ViewScenario.cshtml *@
-@model YetenekPusulasi.Core.Interfaces.Entities.IScenario
+@model YetenekPusulasi.WebApp.Models.StudentViewModels.ViewScenarioViewModel
 @{
-    ViewData["Title"] = Model.Title;
+    ViewData["Title"] = Model.Scenario.Title;
 }
 
-<h4>Senaryo: @Model.Title</h4>
-@if (Model.WasInitialPromptAIGenerated)
+<h4>Senaryo: @Model.Scenario.Title</h4>
+@if (Model.Scenario.WasInitialPromptAIGenerated)
 {
     <small class="text-muted d-block mb-2">(Bu başlangıç metni yapay zeka tarafından sizin için özel olarak oluşturulmuştur)</small>
 }
 <hr />
 
-@* BAŞLANGIÇ PROMPT'U GÖSTERİLİYOR *@
-@if (!string.IsNullOrWhiteSpace(Model.InitialPrompt))
+@if (!string.IsNullOrWhiteSpace(Model.Scenario.InitialPrompt))
 {
     <div class="alert alert-light mb-3" role="alert">
         <h5 class="alert-heading">Başlangıç</h5>
-        <p>@Html.Raw(Model.InitialPrompt.Replace("\n", "<br />"))</p> @* Satır sonlarını <br>'ye çevir *@
+        <p>@Html.Raw(Model.Scenario.InitialPrompt.Replace("\n", "<br />"))</p>
     </div>
 }
 
 <div>
     <dl class="row">
         <dt class="col-sm-2">Senaryo Türü</dt>
-        <dd class="col-sm-10">@Model.Type.ToString()</dd>
-
+        <dd class="col-sm-10">@Model.Scenario.Type.ToString()</dd>
         <dt class="col-sm-2">Asıl Senaryo Açıklaması</dt>
-        <dd class="col-sm-10">
-            <p>@Model.Description</p>
-        </dd>
+        <dd class="col-sm-10"><p>@Model.Scenario.Description</p></dd>
     </dl>
 </div>
 
-<div class="mt-4 card">
-    <div class="card-header">
-        Cevabınız
-    </div>
-    <div class="card-body">
-        @* TODO: Öğrenci bu senaryoya daha önce cevap verdiyse, formu gösterme veya farklı bir mesaj göster. *@
-        <form asp-action="SubmitAnswer" asp-controller="Student" method="post">
-            <input type="hidden" name="ScenarioId" value="@Model.Id" /> @* ViewModel'daki property adı ScenarioId olacak *@
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div> @* Sadece model seviyesi hatalar *@
-            
-            <div class="mb-3">
-                <label for="AnswerText" class="form-label visually-hidden">Cevabınız</label>
-                <textarea name="AnswerText" id="AnswerText" class="form-control" rows="8" placeholder="Senaryoya cevabınızı buraya yazınız..." required minlength="10"></textarea>
-                @* ASP.NET Core MVC'de validation-for tag helper'ı kullanmak daha iyi olurdu eğer tam bir ViewModel'e bind ediyorsak *@
-                @* <span asp-validation-for="AnswerText" class="text-danger"></span> *@
-                <div class="invalid-feedback">Lütfen en az 10 karakterlik bir cevap girin.</div> @* Basit HTML5 validasyonu için *@
+@* --- ÖNCEKİ CEVAPLAR VE ANALİZLERİ --- *@
+@if (Model.StudentAnswers.Any())
+{
+    <h5 class="mt-4">Bu Senaryoya Verdiğiniz Cevap(lar)</h5>
+    foreach (var answer in Model.StudentAnswers.OrderByDescending(a => a.SubmissionDate)) // En son cevap üstte
+    {
+        <div class="card mb-3">
+            <div class="card-header">
+                Cevap Tarihi: @answer.SubmissionDate.ToString("g")
             </div>
-            <button type="submit" class="btn btn-primary">Cevabı Gönder ve Analiz Et</button>
-        </form>
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Verdiğiniz Cevap:</h6>
+                <p class="card-text" style="white-space: pre-wrap;">@answer.AnswerText</p>
+                @if (answer.AnalysisResult != null)
+                {
+                    <hr>
+                    <h6 class="card-subtitle mb-2 text-muted">Analiz Sonucu (@answer.AnalysisResult.AiModelUsed):</h6>
+                    @if (!string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
+                    {
+                        <div class="alert alert-danger small p-2"><strong>Analiz Hatası:</strong> @answer.AnalysisResult.ErrorMessage</div>
+                    }
+                    else
+                    {
+                        <p class="card-text small"><strong>Özet:</strong> @(answer.AnalysisResult.Summary ?? "N/A")</p>
+                        @if (answer.AnalysisResult.OverallScore.HasValue)
+                        {
+                            <p class="card-text small"><strong>Skor:</strong> @answer.AnalysisResult.OverallScore.Value.ToString("P0")</p>
+                        }
+                        @if (answer.AnalysisResult.DetectedSkills != null && answer.AnalysisResult.DetectedSkills.Any())
+                        {
+                            <p class="card-text small"><strong>Tespit Edilenler:</strong> @string.Join(", ", answer.AnalysisResult.DetectedSkills)</p>
+                        }
+                        <a asp-action="ViewAnalysisResult" asp-route-studentAnswerId="@answer.Id" class="btn btn-sm btn-outline-info mt-1">Detaylı Analizi Gör</a>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-warning small p-2 mt-2">Bu cevap için henüz analiz sonucu bulunmamaktadır.</div>
+                }
+            </div>
+        </div>
+    }
+}
+
+@* --- CEVAP YAZMA ALANI --- *@
+@if ((bool)ViewBag.CanSubmitAnswer) // Controller'dan bu değeri set etmiştik
+{
+    <div class="mt-4 card">
+        <div class="card-header">
+            Yeni Cevabınız
+        </div>
+        <div class="card-body">
+            <form asp-action="SubmitAnswer" asp-controller="Student" method="post">
+                <input type="hidden" name="ScenarioId" value="@Model.Scenario.Id" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+                <div class="mb-3">
+                    <label for="AnswerText" class="form-label visually-hidden">Cevabınız</label>
+                    <textarea name="AnswerText" id="AnswerText" class="form-control" rows="8" placeholder="Senaryoya cevabınızı buraya yazınız..." required minlength="10"></textarea>
+                    <div class="invalid-feedback">Lütfen en az 10 karakterlik bir cevap girin.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Cevabı Gönder ve Analiz Et</button>
+            </form>
+        </div>
     </div>
-</div>
+}
+else if (!Model.StudentAnswers.Any()) // Cevap yoksa ve CanSubmitAnswer false ise (mantıksal hata durumu)
+{
+     <div class="alert alert-secondary mt-3">Bu senaryoya şu anda cevap verilemiyor.</div>
+}
 
 
 <div class="mt-3">
-    @* Geri dönülecek sınıfın senaryo listesine link. ClassroomId'yi ViewBag veya ViewData ile taşımak gerekebilir. *@
-    @* Veya bir önceki sayfaya dönme (javascript:history.back()) *@
-    <a asp-action="ViewClassroomScenarios" asp-route-classroomId="@Model.ClassroomId" class="btn btn-outline-secondary">Sınıf Senaryolarına Geri Dön</a>
+    <a asp-action="ViewClassroomScenarios" asp-route-classroomId="@Model.Scenario.ClassroomId" class="btn btn-outline-secondary">Sınıf Senaryolarına Geri Dön</a>
 </div>
 
 @section Scripts {

@@ -1,8 +1,8 @@
 ﻿@* Views/Shared/_Layout.cshtml *@
 @using Microsoft.AspNetCore.Identity
-@using YetenekPusulasi.Data // ApplicationUser namespace'iniz
-@using YetenekPusulasi.Core.Interfaces.Services // INotificationService için
-@using System.Security.Claims // ClaimTypes için
+@using YetenekPusulasi.Data
+@using YetenekPusulasi.Core.Interfaces.Services 
+@using System.Security.Claims
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
@@ -59,7 +59,20 @@
                                     <a class="nav-link text-dark" asp-controller="Student" asp-action="Dashboard">Öğrenci Paneli</a>
                                 </li>
                             }
+
+                            if (User.IsInRole("Student")) // Veya "Student"
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Student" asp-action="Dashboard">Öğrenci Paneli</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Student" asp-action="MyProfile">Profilim ve Cevaplarım</a> @* <<< YENİ LİNK *@
+                                </li>
+                            }
                         }
+
+                       
+   
                     </ul>
                     @* LoginPartial'ı ve Bildirimleri sağ tarafa alalım *@
                     <ul class="navbar-nav">

@@ -23,13 +23,16 @@ namespace YetenekPusulasi.Controllers
         private readonly IAnalysisService _analysisService; // Cevap analizi için
         private readonly ApplicationDbContext _context; // DbContext, eğer gerekli ise
         private readonly ILogger<StudentController> _logger; // Loglama için
+        private readonly IStudentAnswerService _studentAnswerService; // Öğrenci cevaplarını yönetmek için
+
 
         public StudentController(IClassroomService classroomService,
         IScenarioService scenarioService,
         UserManager<ApplicationUser> userManager,
         IAnalysisService analysisService,
         ApplicationDbContext context,
-        ILogger<StudentController> logger)
+        ILogger<StudentController> logger,
+        IStudentAnswerService studentAnswerService)
         {
             _classroomService = classroomService;
             _scenarioService = scenarioService;
@@ -37,6 +40,7 @@ namespace YetenekPusulasi.Controllers
             _analysisService = analysisService;
             _context = context;
             _logger = logger;
+            _studentAnswerService = studentAnswerService;
         }
 
         // Öğrenci Paneli - Katıldığı Sınıfları Listeler
@@ -109,7 +113,7 @@ namespace YetenekPusulasi.Controllers
         }
 
 
-        // Bir Senaryonun Detayını Görüntüleme (Cevaplama Sonraki Adım)
+
         [HttpGet]
         public async Task<IActionResult> ViewScenario(int scenarioId)
         {
@@ -119,22 +123,31 @@ namespace YetenekPusulasi.Controllers
             var scenario = await _scenarioService.GetScenarioByIdAsync(scenarioId);
             if (scenario == null) return NotFound();
 
-            // Yetki Kontrolü: Öğrenci bu senaryonun ait olduğu sınıfa kayıtlı mı?
-            var isEnrolledInScenarioClass = await _classroomService.IsStudentEnrolledAsync(studentId, scenario.ClassroomId);
-            if (!isEnrolledInScenarioClass)
+            var isEnrolled = await _classroomService.IsStudentEnrolledAsync(studentId, scenario.ClassroomId);
+            if (!isEnrolled)
             {
                 TempData["ErrorMessage"] = "Bu senaryoya erişim yetkiniz yok.";
-                return RedirectToAction(nameof(Dashboard)); // Veya ait olduğu sınıfın senaryo listesine
+                return RedirectToAction(nameof(Dashboard));
             }
 
-            // Strategy Deseni Kullanımı (Sonraki adımda veya şimdi eklenebilir)
-            // IScenarioDisplayStrategy displayStrategy = _strategyFactory.GetStrategy(scenario.Type);
-            // ViewBag.ScenarioDisplayHtml = displayStrategy.GetDisplayHtml(scenario);
-            // return View(scenario); // Model olarak IScenario gönderiliyor
+            // Öğrencinin bu senaryoya verdiği cevapları çek
+            var studentAnswersForThisScenario = await _studentAnswerService.GetAnswersByScenarioAsync(scenarioId, studentId);
 
-            // Şimdilik basitçe senaryoyu gönderelim, View'da temel bilgileri gösteririz.
-            return View(scenario); // Views/Student/ViewScenario.cshtml
+            var viewModel = new ViewScenarioViewModel // Yeni bir ViewModel oluşturalım
+            {
+                Scenario = scenario,
+                StudentAnswers = studentAnswersForThisScenario.ToList(),
+                // Strategy deseni ile oluşturulacak HTML için (opsiyonel):
+                // DisplayHtml = _strategyFactory.GetStrategy(scenario.Type).GetDisplayHtml(scenario)
+            };
+
+            // Cevap verme formunu sadece daha önce cevap verilmemişse veya güncellemeye izin veriliyorsa göster
+            ViewBag.CanSubmitAnswer = !studentAnswersForThisScenario.Any(); // Basitçe: Eğer hiç cevap yoksa göster
+
+            return View(viewModel); // Views/Student/ViewScenario.cshtml
         }
+
+
 
 
 
@@ -154,7 +167,7 @@ namespace YetenekPusulasi.Controllers
                 }
                 if (string.IsNullOrEmpty(studentId))
                 {
-                     _logger.LogWarning("SubmitAnswer POST: Yetkisiz erişim denemesi veya studentId alınamadı.");
+                    _logger.LogWarning("SubmitAnswer POST: Yetkisiz erişim denemesi veya studentId alınamadı.");
                     return Unauthorized(); // Veya RedirectToAction("Login", "Account")
                 }
 
@@ -164,10 +177,10 @@ namespace YetenekPusulasi.Controllers
                 var scenarioForRedirect = await _scenarioService.GetScenarioByIdAsync(model.ScenarioId);
                 if (scenarioForRedirect != null)
                 {
-                     // ViewScenario'ya model göndermek yerine ViewBag ile veya doğrudan View'e scenario gönderin
-                     // Bu kısım ViewScenario GET metodunuzun nasıl çalıştığına bağlı.
-                     // Eğer ViewScenario GET metodu sadece scenarioId alıyorsa:
-                     return RedirectToAction("ViewScenario", new { scenarioId = model.ScenarioId });
+                    // ViewScenario'ya model göndermek yerine ViewBag ile veya doğrudan View'e scenario gönderin
+                    // Bu kısım ViewScenario GET metodunuzun nasıl çalıştığına bağlı.
+                    // Eğer ViewScenario GET metodu sadece scenarioId alıyorsa:
+                    return RedirectToAction("ViewScenario", new { scenarioId = model.ScenarioId });
                 }
                 return RedirectToAction("Dashboard"); // Genel bir fallback
             }
@@ -201,7 +214,7 @@ namespace YetenekPusulasi.Controllers
                 AnswerText = model.AnswerText,
                 SubmissionDate = DateTime.UtcNow,
                 Scenario = scenario as Scenario // Eğer StudentAnswer.Scenario IScenario değil de Scenario ise cast gerekebilir. IScenario ise direkt scenario atanabilir.
-                                               // Veya Scenario property'sini hiç set etmeyin, sadece ScenarioId yeterli.
+                                                // Veya Scenario property'sini hiç set etmeyin, sadece ScenarioId yeterli.
             };
 
             _context.StudentAnswers.Add(studentAnswer);
@@ -239,7 +252,7 @@ namespace YetenekPusulasi.Controllers
             return RedirectToAction("ViewClassroomScenarios", new { classroomId = scenario.ClassroomId });
         }
 
-        
+
 
         // Öğrencinin kendi analiz sonucunu görmesi için action
         [HttpGet]
@@ -252,7 +265,7 @@ namespace YetenekPusulasi.Controllers
             // StudentAnswer'dan da StudentId'yi kontrol et ki başkasının sonucunu görmesin.
             var analysis = await _context.AnalysisResults
                 .Include(ar => ar.StudentAnswer) // Eğer AnalysisResult'ta StudentAnswer navigasyon property'si varsa
-                    // .ThenInclude(sa => sa.Scenario) // Ve Scenario'yu da istiyorsak
+                                                 // .ThenInclude(sa => sa.Scenario) // Ve Scenario'yu da istiyorsak
                 .FirstOrDefaultAsync(ar => ar.StudentAnswerId == studentAnswerId && ar.StudentAnswer.StudentId == studentId);
 
             if (analysis == null)
@@ -267,5 +280,32 @@ namespace YetenekPusulasi.Controllers
 
             return View(analysis); // Views/Student/ViewAnalysisResult.cshtml
         }
+        
+
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> MyProfile() // Veya MyAnswers
+        {
+            var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(studentId)) return Unauthorized();
+
+            var student = await _userManager.FindByIdAsync(studentId);
+            if (student == null) return NotFound("Kullanıcı bulunamadı.");
+
+            var allAnswers = await _studentAnswerService.GetAllAnswersByStudentAsync(studentId);
+
+            var viewModel = new StudentProfileViewModel // Yeni bir ViewModel
+            {
+                UserName = student.UserName,
+                Email = student.Email,
+                SubmittedAnswers = allAnswers.ToList()
+            };
+
+            return View(viewModel); // Views/Student/MyProfile.cshtml
+        }
+
+        
     }
 }

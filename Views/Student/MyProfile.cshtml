@@ -1,0 +1,86 @@
+@* Views/Student/MyProfile.cshtml *@
+@model YetenekPusulasi.WebApp.Models.StudentViewModels.StudentProfileViewModel
+
+@{
+    ViewData["Title"] = "Profilim ve Cevaplarım";
+}
+
+<h4>@ViewData["Title"]</h4>
+<hr />
+
+<h5>Profil Bilgilerim</h5>
+<dl class="row">
+    <dt class="col-sm-3">Kullanıcı Adı</dt>
+    <dd class="col-sm-9">@Model.UserName</dd>
+
+    <dt class="col-sm-3">E-posta</dt>
+    <dd class="col-sm-9">@Model.Email</dd>
+
+    @* FirstName ve LastName gösterimi kaldırıldı *@
+</dl>
+@* TODO: Profil düzenleme linki eklenebilir *@
+
+<hr />
+<h5>Tüm Senaryo Cevaplarım (@Model.SubmittedAnswers.Count)</h5>
+
+@if (Model.SubmittedAnswers.Any())
+{
+    <div class="accordion" id="accordionAnswers">
+        @foreach (var answer in Model.SubmittedAnswers)
+        {
+            var collapseId = $"collapse{answer.Id}";
+            var headerId = $"header{answer.Id}";
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="@headerId">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+                        <strong>Senaryo: @(answer.Scenario?.Title ?? "Bilinmeyen Senaryo")</strong> - Cevap Tarihi: @answer.SubmissionDate.ToString("dd.MM.yyyy HH:mm")
+                        @if(answer.AnalysisResult != null && string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
+                        {
+                            <span class="badge bg-success ms-2">Analiz Edildi</span>
+                        }
+                        else if (answer.AnalysisResult != null && !string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
+                        {
+                            <span class="badge bg-danger ms-2">Analiz Hatası</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark ms-2">Analiz Bekleniyor</span>
+                        }
+                    </button>
+                </h2>
+                <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headerId" data-bs-parent="#accordionAnswers">
+                    <div class="accordion-body">
+                        <h6>Verdiğiniz Cevap:</h6>
+                        <p style="white-space: pre-wrap;">@answer.AnswerText</p>
+                        @if (answer.AnalysisResult != null)
+                        {
+                            <hr>
+                            <h6>Analiz Özeti (@answer.AnalysisResult.AiModelUsed):</h6>
+                            @if (!string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
+                            {
+                                <div class="alert alert-danger p-2">@answer.AnalysisResult.ErrorMessage</div>
+                            }
+                            else
+                            {
+                                <p>@answer.AnalysisResult.Summary</p>
+                                @if (answer.AnalysisResult.OverallScore.HasValue)
+                                {
+                                    <p><strong>Skor:</strong> @answer.AnalysisResult.OverallScore.Value.ToString("P0")</p>
+                                }
+                                <a asp-action="ViewAnalysisResult" asp-route-studentAnswerId="@answer.Id" class="btn btn-sm btn-outline-primary">Detaylı Analizi Gör</a>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p>Henüz herhangi bir senaryoya cevap vermediniz.</p>
+}
+
+<div class="mt-3">
+    <a asp-action="Dashboard" class="btn btn-secondary">Öğrenci Paneline Geri Dön</a>
+</div>

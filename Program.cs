@@ -85,9 +85,11 @@ builder.Services.AddHttpClient(); // Temel AddHttpClient
 
 
 
-// Program.cs
+// AI Connection Tester
 builder.Services.AddScoped<IAiConnectionTester, AiConnectionTester>();
 
+// StudentAnswerService
+builder.Services.AddScoped<IStudentAnswerService, StudentAnswerService>();
 
 
 // Initial Prompt Generation Strategies
