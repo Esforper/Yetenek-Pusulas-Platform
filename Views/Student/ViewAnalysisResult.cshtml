@@ -1,5 +1,6 @@
 @* Views/Student/ViewAnalysisResult.cshtml *@
 @model YetenekPusulasi.Core.Entities.AnalysisResult
+@using YetenekPusulasi.WebApp.Helpers // MarkdownHelper için (namespace'inizi kontrol edin)
 
 @{
     ViewData["Title"] = "Cevap Analiz Sonucunuz";
@@ -17,6 +18,7 @@
     </div>
 }
 
+@* ... (Senaryo ve Cevap kartı aynı kalabilir) ... *@
 <div class="card mb-3">
     <div class="card-header">Senaryo ve Verdiğiniz Cevap</div>
     <div class="card-body">
@@ -28,46 +30,65 @@
     </div>
 </div>
 
+
 <div class="card">
     <div class="card-header bg-primary text-white">Yapay Zeka Analizi (@Model.AiModelUsed)</div>
     <div class="card-body">
         <h5 class="card-title">Özet Değerlendirme</h5>
-        <p class="card-text">@(Model.Summary ?? "Özet bulunamadı.")</p>
-
+        @* --- MARKDOWN GÖSTERİMİ --- *@
+        <div class="markdown-content">
+            @Html.Raw(MarkdownHelper.Parse(Model.Summary)) @* Model.Summary'nin markdown içerdiğini varsayıyoruz *@
+        </div>
+        @* --- MARKDOWN GÖSTERİMİ BİTTİ --- *@
+        
         @if (Model.OverallScore.HasValue)
         {
-            <h6>Genel Skor: <span class="badge bg-info">@Model.OverallScore.Value.ToString("P0")</span></h6>
+            <h6 class="mt-3">Genel Skor: <span class="badge bg-info">@Model.OverallScore.Value.ToString("P0")</span></h6>
         }
 
         @if (Model.DetectedSkills != null && Model.DetectedSkills.Any())
         {
-            <h6>Tespit Edilen Yetenekler/Noktalar:</h6>
+            <h6 class="mt-3">Tespit Edilen Yetenekler/Noktalar:</h6>
             <ul class="list-group list-group-flush">
                 @foreach (var skill in Model.DetectedSkills)
                 {
-                    <li class="list-group-item">@skill</li>
+                    <li class="list-group-item px-0">@skill</li> @* px-0 ile list-group padding'ini sıfırla *@
                 }
             </ul>
         }
-        
-        @if (!string.IsNullOrEmpty(Model.RawAiResponse) && User.IsInRole("Admin")) // Sadece Admin ham cevabı görsün (opsiyonel)
-        {
-            <div class="mt-3">
-                <small>
-                    <a data-bs-toggle="collapse" href="#rawAiResponseCollapse" role="button" aria-expanded="false" aria-controls="rawAiResponseCollapse">
-                        Ham AI Cevabını Göster/Gizle (Admin)
-                    </a>
-                </small>
-                <div class="collapse" id="rawAiResponseCollapse">
-                    <pre class="bg-light p-2 mt-2" style="max-height: 200px; overflow-y: auto;"><code>@Model.RawAiResponse</code></pre>
+
+        @if (!string.IsNullOrWhiteSpace(Model.RawAiResponse))
+{
+    bool showRawToStudent = true; // VEYA bir ayardan/rol kontrolünden gelsin
+    if (showRawToStudent) // Admin her zaman görsün, öğrenci için de flag'e bağlı
+    {
+        <div class="mt-4">
+            <h6>
+                <a class="text-decoration-none" data-bs-toggle="collapse" href="#rawAiResponseCollapse" role="button" aria-expanded="false" aria-controls="rawAiResponseCollapse">
+                    <i class="bi bi-chevron-down"></i> Yapay Zeka Detaylı Çıktısı (Ham Veri)
+                </a>
+            </h6>
+            <div class="collapse" id="rawAiResponseCollapse">
+                <div class="card card-body bg-light mt-2">
+                    @* Eğer RawAiResponse'un da markdown olduğunu varsayıyorsak: *@
+                    <div class="markdown-content-raw">
+                         @Html.Raw(MarkdownHelper.Parse(Model.RawAiResponse))
+                    </div>
+                    @* Eğer RawAiResponse sadece düz metin ve satır sonları önemliyse: *@
+                    @* <pre style="white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow-y: auto;"><code>@Model.RawAiResponse</code></pre> *@
                 </div>
             </div>
-        }
+        </div>
+    }
+}
+@* --- HAM AI CEVABI BİTTİ --- *@
     </div>
     <div class="card-footer text-muted">
         Analiz Tarihi: @Model.AnalysisDate.ToString("g")
     </div>
 </div>
+
+@* ... (Geri dönüş linkleri) ... *@
 
 <div class="mt-3">
     <a asp-action="ViewClassroomScenarios" asp-route-classroomId="@Model.StudentAnswer?.Scenario?.ClassroomId" class="btn btn-outline-secondary">Sınıf Senaryolarına Geri Dön</a>
