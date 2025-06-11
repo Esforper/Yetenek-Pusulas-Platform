@@ -1,8 +1,9 @@
 ﻿@* Views/Shared/_Layout.cshtml *@
 @using Microsoft.AspNetCore.Identity
 @using YetenekPusulasi.Data
-@using YetenekPusulasi.Core.Interfaces.Services 
+@using YetenekPusulasi.Core.Interfaces.Services
 @using System.Security.Claims
+@using YetenekPusulasi.Core
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
@@ -13,102 +14,84 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - YetenekPusulasi</title>
-    @* <script type="importmap"></script> // Bu satıra ihtiyacınız yoksa kaldırabilirsiniz *@
+    <title>@ViewData["Title"] - Yetenek Pusulası</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css"> @* Bootstrap ikonları için *@
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"> @* Bootstrap ikonları güncel versiyon *@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/YetenekPusulasi.WebApp.styles.css" asp-append-version="true" /> @* Proje adınıza göre düzeltin *@
-    <style>
-        /* _Layout içine basit stiller, site.css'e taşınabilir */
-        .notification-item-layout.unread-layout { background-color: #f8f9fa; font-weight: bold; }
-        .dropdown-menu[aria-labelledby="navbarDropdownNotificationsLayout"] .dropdown-item { white-space: normal; }
-    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">YetenekPusulasi</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow mb-4"> @* navbar-expand-lg ve mb-4 *@
+            <div class="container"> @* container-fluid yerine container *@
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-compass-fill me-2"></i>Yetenek Pusulası @* Proje İkonu *@
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="collapse navbar-collapse" id="navbarResponsive">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0"> @* me-auto ile sola yasla *@
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
                         </li>
-                        @*<li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>*@
 
                         @if (SignInManager.IsSignedIn(User))
                         {
-                            // Öğretmen Paneli Linki (Eğer Öğretmen ise)
                             if (User.IsInRole("Teacher"))
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-controller="Teacher" asp-action="Dashboard">Öğretmen Paneli</a>
+                                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Teacher" ? "active" : "")" asp-controller="Teacher" asp-action="Dashboard">Öğretmen Paneli</a>
                                 </li>
                             }
-                            // Öğrenci Paneli Linki (Eğer Öğrenci ise)
                             else if (User.IsInRole("Student"))
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-controller="Student" asp-action="Dashboard">Öğrenci Paneli</a>
-                                </li>
-                            }
-
-                            if (User.IsInRole("Student")) // Veya "Student"
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-controller="Student" asp-action="Dashboard">Öğrenci Paneli</a>
+                                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Student" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Student" asp-action="Dashboard">Öğrenci Paneli</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-controller="Student" asp-action="MyProfile">Profilim ve Cevaplarım</a> @* <<< YENİ LİNK *@
+                                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Student" && ViewContext.RouteData.Values["action"]?.ToString() == "MyProfile" ? "active" : "")" asp-controller="Student" asp-action="MyProfile">Profilim</a>
                                 </li>
                             }
                         }
-
-                       
-   
                     </ul>
-                    @* LoginPartial'ı ve Bildirimleri sağ tarafa alalım *@
-                    <ul class="navbar-nav">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0"> @* ms-auto ile sağa yasla *@
                         @if (SignInManager.IsSignedIn(User))
                         {
                             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                            // SADECE ÖĞRETMEN İSE BİLDİRİMLERİ GÖSTER
                             if (User.IsInRole("Teacher") && !string.IsNullOrEmpty(currentUserId))
                             {
                                 var unreadNotifications = await NotificationService.GetUnreadNotificationsAsync(currentUserId);
                                 var unreadCount = unreadNotifications.Count();
 
                                 <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownNotificationsLayout" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Bildirimler">
-                                        <i class="bi bi-bell-fill"></i>
+                                    <a class="nav-link dropdown-toggle @(unreadCount > 0 ? "text-danger" : "")" href="#" id="navbarDropdownNotificationsLayout" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Bildirimler">
+                                        <i class="bi bi-bell@(unreadCount > 0 ? "-fill" : "")"></i>
                                         @if (unreadCount > 0)
                                         {
-                                            <span class="badge rounded-pill bg-danger">@unreadCount</span>
+                                            <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 0.6em; padding: 0.25em 0.4em;">
+                                                @unreadCount
+                                                <span class="visually-hidden">okunmamış bildirim</span>
+                                            </span>
                                         }
                                     </a>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdownNotificationsLayout" style="min-width: 300px; max-height: 350px; overflow-y: auto;">
-                                        <li class="dropdown-header">
-                                            Bildirimler
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="navbarDropdownNotificationsLayout" style="min-width: 350px; max-height: 400px; overflow-y: auto;">
+                                        <li class="dropdown-header d-flex justify-content-between align-items-center px-3 py-2">
+                                            <span>Bildirimler</span>
                                             @if (unreadCount > 0)
                                             {
-                                                <a asp-controller="Notification" asp-action="MarkAllAsRead" class="float-end small text-primary">Tümünü Oku</a>
+                                                <a asp-controller="Notification" asp-action="MarkAllAsRead" class="btn btn-sm btn-outline-primary py-0 px-1" style="font-size:0.75rem;">Tümünü Oku</a>
                                             }
                                         </li>
-                                        <li><hr class="dropdown-divider my-1"></li>
+                                        <li><hr class="dropdown-divider my-0"></li>
                                         @if (unreadNotifications.Any())
                                         {
                                             foreach (var notification in unreadNotifications)
                                             {
                                                 <li class="notification-item-layout @(notification.IsRead ? "" : "unread-layout")">
-                                                    <a class="dropdown-item py-1" asp-controller="Notification" asp-action="ViewNotification" asp-route-id="@notification.Id">
-                                                        <small class="text-muted d-block">@notification.CreatedDate.ToString("dd.MM.yy HH:mm")</small>
+                                                    <a class="dropdown-item" asp-controller="Notification" asp-action="ViewNotification" asp-route-id="@notification.Id">
+                                                        <small class="text-muted d-block">@notification.CreatedDate.ToString("dd MMM HH:mm")</small>
                                                         @notification.Message
                                                     </a>
                                                 </li>
@@ -116,32 +99,38 @@
                                         }
                                         else
                                         {
-                                            <li><p class="dropdown-item text-center text-muted py-2">Yeni bildirim yok.</p></li>
+                                            <li><p class="dropdown-item text-center text-muted py-3">Yeni bildirim yok.</p></li>
                                         }
                                     </ul>
                                 </li>
                             }
                         }
-                        <partial name="_LoginPartial" /> @* _LoginPartial artık burada *@
+                        <partial name="_LoginPartial" />
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @* TempData mesajlarını buraya ekleyelim *@
+    <div class="container mt-4"> @* Container'a üstten margin *@
+        <main role="main" class="pb-5"> @* Alt boşluğu artır *@
             @if (TempData["SuccessMessage"] != null)
             {
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    @TempData["SuccessMessage"]
+                    <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
             @if (TempData["ErrorMessage"] != null)
             {
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    @TempData["ErrorMessage"]
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["WarningMessage"] != null)
+            {
+                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["WarningMessage"]
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
@@ -149,10 +138,9 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            © @DateTime.Now.Year - YetenekPusulasi
-            @*<a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>*@
+    <footer class="footer mt-auto py-3 bg-dark text-white-50"> @* Footer'ı güncelle *@
+        <div class="container text-center">
+            © @DateTime.Now.Year - Yetenek Pusulası - Tüm Hakları Saklıdır.
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

@@ -1,6 +1,6 @@
 @* Views/Teacher/ViewStudentAnswerAnalysis.cshtml *@
 @model YetenekPusulasi.Core.Entities.AnalysisResult
-@using YetenekPusulasi.WebApp.Helpers // MarkdownHelper için
+@using YetenekPusulasi.WebApp.Helpers
 
 @{
     var studentUserName = Model.StudentAnswer?.Student?.UserName ?? "Bilinmeyen Öğrenci";
@@ -8,78 +8,168 @@
     ViewData["Title"] = $"{studentUserName} - '{scenarioTitle}' Analizi";
 }
 
-<h4>@ViewData["Title"]</h4>
-<hr />
-
-@if (!string.IsNullOrEmpty(Model.ErrorMessage))
-{
-    <div class="alert alert-danger" role="alert">
-        <strong>Analiz Hatası:</strong> @Model.ErrorMessage
-    </div>
-}
-
-@* ... (Öğrenci Cevabı Kartı aynı kalabilir) ... *@
-<div class="card mb-3">
-    <div class="card-header">
-        Öğrenci: <strong>@studentUserName</strong> - Senaryo: <strong>@scenarioTitle</strong>
-    </div>
-    <div class="card-body">
-        <h6 class="card-subtitle mb-2 text-muted">Öğrencinin Cevabı (@Model.StudentAnswer?.SubmissionDate.ToShortDateString()):</h6>
-        <p class="card-text bg-light p-2 rounded" style="white-space: pre-wrap;">@(Model.StudentAnswer?.AnswerText ?? "Cevap metni bulunamadı.")</p>
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-header bg-success text-white">Yapay Zeka Analizi (@Model.AiModelUsed)</div>
-    <div class="card-body">
-        <h5 class="card-title">Özet Değerlendirme</h5>
-        @* --- MARKDOWN GÖSTERİMİ --- *@
-        <div class="markdown-content">
-            @Html.Raw(MarkdownHelper.Parse(Model.Summary))
-        </div>
-        @* --- MARKDOWN GÖSTERİMİ BİTTİ --- *@
-
-        @if (Model.OverallScore.HasValue)
-        {
-            <h6 class="mt-3">Genel Skor: <span class="badge bg-info">@Model.OverallScore.Value.ToString("P0")</span></h6>
-        }
-
-        @if (Model.DetectedSkills != null && Model.DetectedSkills.Any())
-        {
-            <h6 class="mt-3">Tespit Edilen Yetenekler/Noktalar:</h6>
-            <ul class="list-group list-group-flush">
-                @foreach (var skill in Model.DetectedSkills)
-                {
-                    <li class="list-group-item px-0">@skill</li>
-                }
-            </ul>
-        }
-        
-       <div class="mt-4">
-            <h6>
-                <a class="text-decoration-none" data-bs-toggle="collapse" href="#rawAiResponseCollapse" role="button" aria-expanded="false" aria-controls="rawAiResponseCollapse">
-                    <i class="bi bi-chevron-down"></i> Yapay Zeka Detaylı Çıktısı (Ham Veri)
-                </a>
-            </h6>
-            <div class="collapse" id="rawAiResponseCollapse">
-                <div class="card card-body bg-light mt-2">
-                    @* Eğer RawAiResponse'un da markdown olduğunu varsayıyorsak: *@
-                    <div class="markdown-content-raw">
-                         @Html.Raw(MarkdownHelper.Parse(Model.RawAiResponse))
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill fs-4 me-2"></i>
+                    <div>
+                        <strong>Analiz Hatası:</strong> @Model.ErrorMessage
                     </div>
-                    @* Eğer RawAiResponse sadece düz metin ve satır sonları önemliyse: *@
-                    @* <pre style="white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow-y: auto;"><code>@Model.RawAiResponse</code></pre> *@
                 </div>
+            }
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-fill me-2"></i>@studentUserName
+                        <small class="ms-2 opacity-75">- @scenarioTitle</small>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary mb-3">
+                                        <i class="bi bi-chat-left-text me-2"></i>Öğrenci Cevabı
+                                    </h5>
+                                    <p class="text-muted mb-2">
+                                        <i class="bi bi-calendar3 me-1"></i>
+                                        @Model.StudentAnswer?.SubmissionDate.ToShortDateString()
+                                    </p>
+                                    <div class="bg-white p-3 rounded shadow-sm" style="white-space: pre-wrap;">
+                                        @(Model.StudentAnswer?.AnswerText ?? "Cevap metni bulunamadı.")
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary mb-3">
+                                        <i class="bi bi-graph-up me-2"></i>Analiz Özeti
+                                    </h5>
+                                    @if (Model.OverallScore.HasValue)
+                                    {
+                                        <div class="text-center mb-4">
+                                            <div class="score-circle mx-auto mb-2">
+                                                @Model.OverallScore.Value.ToString("P0")
+                                            </div>
+                                            <h6 class="text-muted">Genel Skor</h6>
+                                        </div>
+                                    }
+                                    <div class="markdown-content bg-white p-3 rounded shadow-sm">
+                                        @Html.Raw(MarkdownHelper.Parse(Model.Summary))
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.DetectedSkills != null && Model.DetectedSkills.Any())
+                    {
+                        <div class="card border-0 bg-light mt-4">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary mb-3">
+                                    <i class="bi bi-list-check me-2"></i>Tespit Edilen Yetenekler
+                                </h5>
+                                <div class="row">
+                                    @foreach (var skill in Model.DetectedSkills)
+                                    {
+                                        <div class="col-md-4 mb-2">
+                                            <div class="bg-white p-2 rounded shadow-sm d-flex align-items-center">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                <span>@skill</span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="card border-0 bg-light mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary mb-3">
+                                <i class="bi bi-code-square me-2"></i>Yapay Zeka Detaylı Çıktısı
+                            </h5>
+                            <div class="bg-white p-3 rounded shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <small class="text-muted">
+                                        <i class="bi bi-cpu me-1"></i>@Model.AiModelUsed
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock me-1"></i>@Model.AnalysisDate.ToString("g")
+                                    </small>
+                                </div>
+                                <div class="markdown-content-raw">
+                                    @Html.Raw(MarkdownHelper.Parse(Model.RawAiResponse))
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <a asp-action="ClassroomDetails" asp-route-id="@Model.StudentAnswer?.Scenario?.ClassroomId" 
+                   class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left me-1"></i>Sınıf Detaylarına Geri Dön
+                </a>
+                <a asp-action="Dashboard" class="btn btn-primary">
+                    <i class="bi bi-speedometer2 me-1"></i>Öğretmen Paneline Dön
+                </a>
             </div>
         </div>
     </div>
-    <div class="card-footer text-muted">
-        Analiz Tarihi: @Model.AnalysisDate.ToString("g")
-    </div>
 </div>
 
+<style>
+    .card {
+        border-radius: 1rem;
+    }
 
-<div class="mt-3">
-    <a asp-action="ClassroomDetails" asp-route-id="@Model.StudentAnswer?.Scenario?.ClassroomId" class="btn btn-outline-secondary">Sınıf Detaylarına Geri Dön</a>
-    <a asp-action="Dashboard" class="btn btn-info">Öğretmen Paneline Dön</a>
-</div>
+    .card-header {
+        border-radius: 1rem 1rem 0 0 !important;
+        padding: 1.5rem;
+    }
+
+    .score-circle {
+        width: 80px;
+        height: 80px;
+        background-color: #0d6efd;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .markdown-content, .markdown-content-raw {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .markdown-content pre {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        overflow-x: auto;
+    }
+
+    .markdown-content code {
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+    }
+
+    .btn {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1.5rem;
+    }
+</style> 

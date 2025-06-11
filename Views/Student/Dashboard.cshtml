@@ -1,35 +1,113 @@
-@* Views/Student/Dashboard.cshtml *@
 @model IEnumerable<YetenekPusulasi.Core.Entities.Classroom>
 @{
     ViewData["Title"] = "Öğrenci Paneli";
 }
 
-<h4>Merhaba, @ViewBag.StudentName!</h4>
-<p>Aşağıda kayıtlı olduğunuz sınıfları görebilirsiniz.</p>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-2">
+                                <i class="bi bi-person-circle me-2"></i>Merhaba, @ViewBag.StudentName!
+                            </h1>
+                            <p class="text-muted mb-0">Aşağıda kayıtlı olduğunuz sınıfları görebilirsiniz.</p>
+                        </div>
+                        <a asp-action="JoinClassroom" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Yeni Bir Sınıfa Katıl
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="mb-3">
-    <a asp-action="JoinClassroom" class="btn btn-primary">Yeni Bir Sınıfa Katıl</a>
+    @if (Model.Any())
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-mortarboard me-2"></i>Kayıtlı Olduğunuz Sınıflar
+                            <span class="badge bg-primary ms-2">@Model.Count()</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            @foreach (var classroom in Model)
+                            {
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card h-100 border-0 shadow-sm hover-card">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <i class="bi bi-mortarboard-fill text-primary fs-4 me-2"></i>
+                                                <h5 class="card-title mb-0">@classroom.Name</h5>
+                                            </div>
+                                            <p class="card-text text-muted small mb-3">
+                                                @(!string.IsNullOrEmpty(classroom.Description) ? classroom.Description : "Açıklama yok.")
+                                            </p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-person me-1"></i>@(classroom.Teacher?.UserName ?? "N/A")
+                                                </small>
+                                                <a asp-action="ViewClassroomScenarios" asp-route-classroomId="@classroom.Id" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-arrow-right me-1"></i>Senaryoları Gör
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-mortarboard display-1 text-muted mb-3"></i>
+                        <h5 class="text-muted">Henüz Sınıf Bulunmuyor</h5>
+                        <p class="text-muted">Henüz kayıtlı olduğunuz bir sınıf bulunmamaktadır.</p>
+                        <a asp-action="JoinClassroom" class="btn btn-primary mt-3">
+                            <i class="bi bi-plus-circle me-1"></i>İlk Sınıfınıza Katılın
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
-@if (Model.Any())
-{
-    <h5>Kayıtlı Olduğunuz Sınıflar</h5>
-    <div class="list-group">
-        @foreach (var classroom in Model)
-        {
-            <a asp-action="ViewClassroomScenarios" asp-route-classroomId="@classroom.Id" class="list-group-item list-group-item-action">
-                <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1">@classroom.Name</h6>
-                    <small>Öğretmen: @(classroom.Teacher?.UserName ?? "N/A")</small>
-                </div>
-                <p class="mb-1">@(!string.IsNullOrEmpty(classroom.Description) ? classroom.Description : "Açıklama yok.")</p>
-            </a>
-        }
-    </div>
-}
-else
-{
-    <div class="alert alert-info" role="alert">
-        Henüz hiçbir sınıfa kayıtlı değilsiniz. "Yeni Bir Sınıfa Katıl" butonu ile bir sınıfa katılabilirsiniz.
-    </div>
-}
+<style>
+    .card {
+        border-radius: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.5em 0.8em;
+    }
+
+    .btn {
+        border-radius: 0.5rem;
+    }
+
+    .text-muted {
+        color: #6c757d!important;
+    }
+</style> 

@@ -5,116 +5,205 @@
     ViewData["Title"] = $"Sınıf Detayları: {Model.Classroom.Name}";
 }
 
-<div>
-    <h3>@Model.Classroom.Name</h3>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-3">Açıklama</dt>
-        <dd class="col-sm-9">@(Model.Classroom.Description ?? "Açıklama yok.")</dd>
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-mortarboard-fill me-2"></i>@Model.Classroom.Name
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <h5 class="text-muted mb-3">Sınıf Bilgileri</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4 text-muted">Açıklama</dt>
+                                    <dd class="col-sm-8">@(Model.Classroom.Description ?? "Açıklama yok.")</dd>
 
-        <dt class="col-sm-3">Katılım Kodu</dt>
-        <dd class="col-sm-9"><strong>@Model.Classroom.ParticipationCode</strong></dd>
+                                    <dt class="col-sm-4 text-muted">Katılım Kodu</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge bg-info text-dark fs-6">@Model.Classroom.ParticipationCode</span>
+                                    </dd>
 
-        <dt class="col-sm-3">Oluşturan Öğretmen</dt>
-        <dd class="col-sm-9">@Model.Classroom.Teacher?.UserName</dd>
-    </dl>
-</div>
-<hr/>
+                                    <dt class="col-sm-4 text-muted">Oluşturan Öğretmen</dt>
+                                    <dd class="col-sm-8">
+                                        <i class="bi bi-person-fill me-1"></i>@Model.Classroom.Teacher?.UserName
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary mb-3">
+                                        <i class="bi bi-graph-up me-2"></i>Sınıf İstatistikleri
+                                    </h5>
+                                    <div class="row text-center">
+                                        <div class="col-6 mb-3">
+                                            <div class="p-3 bg-white rounded shadow-sm">
+                                                <h3 class="text-primary mb-0">@Model.Scenarios.Count</h3>
+                                                <small class="text-muted">Toplam Senaryo</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="p-3 bg-white rounded shadow-sm">
+                                                <h3 class="text-success mb-0">@Model.Students.Count</h3>
+                                                <small class="text-muted">Kayıtlı Öğrenci</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-<h4>Bu Sınıfa Ait Senaryolar</h4>
-<p>
-    <a asp-action="CreateScenarioForClassroom" asp-route-classroomId="@Model.Classroom.Id" class="btn btn-success mb-2">
-        <i class="bi bi-plus-circle"></i> Bu Sınıfa Yeni Senaryo Ekle
-    </a>
-</p>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-journal-text me-2"></i>Senaryolar
+                    </h4>
+                    <a asp-action="CreateScenarioForClassroom" asp-route-classroomId="@Model.Classroom.Id" 
+                       class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Yeni Senaryo Ekle
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (Model.Scenarios.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Başlık</th>
+                                        <th>Tür</th>
+                                        <th>Oluşturulma Tarihi</th>
+                                        <th class="text-end">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var scenario in Model.Scenarios)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-file-text text-primary me-2"></i>
+                                                    @Html.DisplayFor(modelItem => scenario.Title)
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">@Html.DisplayFor(modelItem => scenario.Type)</span>
+                                            </td>
+                                            <td>
+                                                <i class="bi bi-calendar3 me-1"></i>
+                                                @scenario.CreatedDate.ToShortDateString()
+                                            </td>
+                                            <td class="text-end">
+                                                <a asp-action="ViewScenarioAnswers" asp-controller="Teacher" 
+                                                   asp-route-scenarioId="@scenario.Id" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye me-1"></i>Cevapları Görüntüle
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-journal-x display-1 text-muted mb-3"></i>
+                            <h5 class="text-muted">Henüz Senaryo Bulunmuyor</h5>
+                            <p class="text-muted">Bu sınıfa henüz atanmış bir senaryo bulunmamaktadır.</p>
+                            <a asp-action="CreateScenarioForClassroom" asp-route-classroomId="@Model.Classroom.Id" 
+                               class="btn btn-primary mt-3">
+                                <i class="bi bi-plus-circle me-1"></i>İlk Senaryoyu Oluştur
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
 
-@* ... (Sınıf bilgileri ve "Bu Sınıfa Yeni Senaryo Ekle" butonu) ... *@
-
-@if (Model.Scenarios.Any())
-{
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>Başlık</th>
-                <th>Tür</th>
-                <th>Oluşturulma Tarihi</th>
-                <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var scenario in Model.Scenarios)
-            {
-                <tr>
-                    <td>@Html.DisplayFor(modelItem => scenario.Title)</td>
-                    <td>@Html.DisplayFor(modelItem => scenario.Type)</td>
-                    <td>@scenario.CreatedDate.ToShortDateString()</td>
-                    <td>
-                        <a asp-action="ViewScenarioAnswers" asp-controller="Teacher" asp-route-scenarioId="@scenario.Id" class="btn btn-sm btn-info">
-                            Cevapları Görüntüle
-                        </a>
-                        @* İleride Düzenle/Sil linkleri eklenebilir *@
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-@* ... (else bloğu) ... *@
-
-
-
-
-@if (Model.Scenarios.Any())
-{
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>Başlık</th>
-                <th>Tür</th>
-                <th>Oluşturulma Tarihi</th>
-                <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var scenario in Model.Scenarios)
-            {
-                <tr>
-                    <td>@Html.DisplayFor(modelItem => scenario.Title)</td>
-                    <td>@Html.DisplayFor(modelItem => scenario.Type)</td>
-                    <td>@scenario.CreatedDate.ToShortDateString()</td>
-                    <td>
-                        @* İleride Senaryo Detay/Düzenle/Sil linkleri buraya eklenebilir *@
-                        @* <a asp-controller="Scenario" asp-action="Details" asp-route-id="@scenario.Id" class="btn btn-sm btn-info">Detay</a> *@
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <div class="alert alert-info" role="alert">
-        Bu sınıfa henüz atanmış bir senaryo bulunmamaktadır. Yukarıdaki butonu kullanarak yeni bir senaryo ekleyebilirsiniz.
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-people-fill me-2"></i>Sınıftaki Öğrenciler
+                        <span class="badge bg-primary ms-2">@Model.Students.Count</span>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.Students.Any())
+                    {
+                        <div class="row">
+                            @foreach (var student in Model.Students)
+                            {
+                                <div class="col-md-4 col-lg-3 mb-3">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body text-center">
+                                            <div class="avatar-circle mb-3 mx-auto">
+                                                <i class="bi bi-person-fill"></i>
+                                            </div>
+                                            <h6 class="card-title mb-0">@student.UserName</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-people display-1 text-muted mb-3"></i>
+                            <h5 class="text-muted">Henüz Öğrenci Bulunmuyor</h5>
+                            <p class="text-muted">Bu sınıfta henüz kayıtlı öğrenci bulunmamaktadır.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
-}
 
-<hr />
-
-<h4>Sınıftaki Öğrenciler (@Model.Students.Count)</h4>
-@if (Model.Students.Any())
-{
-    <ul class="list-group">
-        @foreach (var student in Model.Students)
-        {
-            <li class="list-group-item">@student.UserName</li>
-        }
-    </ul>
-}
-else
-{
-    <p>Bu sınıfta henüz kayıtlı öğrenci bulunmamaktadır.</p>
-}
-
-<div class="mt-3">
-    <a asp-action="Dashboard" class="btn btn-outline-secondary">Öğretmen Paneline Geri Dön</a>
+    <div class="mt-4 text-center">
+        <a asp-action="Dashboard" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Öğretmen Paneline Geri Dön
+        </a>
+    </div>
 </div>
+
+<style>
+    .avatar-circle {
+        width: 60px;
+        height: 60px;
+        background-color: #e9ecef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #6c757d;
+    }
+
+    .card {
+        border-radius: 0.5rem;
+        border: none;
+    }
+
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,.125);
+    }
+
+    .table > :not(caption) > * > * {
+        padding: 1rem;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.5em 0.8em;
+    }
+</style> 

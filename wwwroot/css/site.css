@@ -1,3 +1,6 @@
+/* wwwroot/css/site.css */
+
+/* Genel Sayfa Stilleri */
 html {
   font-size: 14px;
 }
@@ -8,24 +11,117 @@ html {
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
 html {
   position: relative;
   min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+  margin-bottom: 60px; /* Footer yüksekliği kadar */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Daha modern bir font */
+  background-color: #f8f9fa; /* Hafif gri arka plan */
+  color: #333;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+/* Navbar İyileştirmeleri */
+.navbar {
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+    /* background-color: #ffffff !important; /* Temiz beyaz arka plan */
+    /* box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075) !important; /* Daha belirgin gölge */
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.navbar-brand {
+    font-weight: 600; /* Daha kalın marka ismi */
+    font-size: 1.5rem;
+    color: #0d6efd !important; /* Ana proje rengi (Bootstrap primary) */
+}
+
+.nav-link {
+    color: #495057 !important; /* Daha yumuşak link rengi */
+    padding: 0.6rem 1rem !important;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: #0d6efd !important; /* Hover ve aktif link rengi */
+}
+
+/* Bildirim Dropdown İyileştirmeleri */
+.dropdown-menu[aria-labelledby="navbarDropdownNotificationsLayout"] {
+    border: 1px solid #dee2e6; /* Daha belirgin border */
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important; /* Daha derin gölge */
+}
+
+.notification-item-layout {
+    border-bottom: 1px solid #f0f0f0; /* Bildirimler arası ayraç */
+    padding: 0.5rem 1rem; /* İç boşluk */
+}
+.notification-item-layout:last-child {
+    border-bottom: none;
+}
+
+.notification-item-layout.unread-layout {
+    background-color: #e9ecef; /* Okunmamış bildirimler için hafif farklı arka plan */
+    font-weight: 500;
+}
+.notification-item-layout a {
+    color: #212529;
+    text-decoration: none;
+    display: block;
+}
+.notification-item-layout a:hover {
+    background-color: #f8f9fa;
+}
+.notification-item-layout small.text-muted {
+    font-size: 0.75rem;
+}
+
+/* Footer */
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px; /* line-height footer yüksekliği ile aynı olmalı */
+  background-color: #343a40; /* Koyu footer */
+  color: #adb5bd; /* Footer metin rengi */
+}
+
+.footer a {
+    color: #ced4da;
+}
+
+.footer a:hover {
+    color: #ffffff;
+}
+
+/* Butonlar */
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+/* Ana Sayfa (Index.cshtml) Özel Stilleri */
+.hero-section {
+    background: linear-gradient(45deg, #0d6efd, #6f42c1); /* Proje renkleriyle gradient */
+    color: white;
+    padding: 4rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0.5rem;
+}
+.hero-section h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+}
+.hero-section .lead {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.hero-section .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
 }

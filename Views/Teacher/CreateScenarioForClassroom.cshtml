@@ -5,53 +5,152 @@
     ViewData["Title"] = $"'{Model.ClassroomName}' Sınıfına Yeni Senaryo Ekle";
 }
 
-<h4>@ViewData["Title"]</h4>
-<hr />
-<div class="row">
-    <div class="col-md-8">
-        <form asp-action="CreateScenarioForClassroom">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="ClassroomId" />
-            <input type="hidden" asp-for="ClassroomName" /> @* Postback'te korumak için *@
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>@ViewData["Title"]
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="CreateScenarioForClassroom" class="needs-validation" novalidate>
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        <input type="hidden" asp-for="ClassroomId" />
+                        <input type="hidden" asp-for="ClassroomName" />
 
-            <div class="mb-3">
-                <label asp-for="Title" class="form-label"></label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="Description" class="form-label"></label>
-                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="Type" class="form-label"></label>
-                <select asp-for="Type" asp-items="Model.ScenarioTypes" class="form-select">
-                    <option value="">-- Tür Seçin --</option>
-                </select>
-                <span asp-validation-for="Type" class="text-danger"></span>
-            </div>
-            
-<div class="mb-3">
-    <label asp-for="TeacherProvidedInitialPrompt" class="form-label"></label>
-    <textarea asp-for="TeacherProvidedInitialPrompt" class="form-control" rows="3" placeholder="Eğer yapay zekanın üretmesini istemiyorsanız veya ona yön vermek istiyorsanız buraya yazın..."></textarea>
-    <span asp-validation-for="TeacherProvidedInitialPrompt" class="text-danger"></span>
-</div>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-4">
+                                    <label asp-for="Title" class="form-label">
+                                        <i class="bi bi-pencil-square me-1"></i>Senaryo Başlığı
+                                    </label>
+                                    <input asp-for="Title" class="form-control form-control-lg" 
+                                           placeholder="Senaryonuz için açıklayıcı bir başlık girin" required />
+                                    <span asp-validation-for="Title" class="text-danger"></span>
+                                </div>
 
-<div class="form-check mb-3">
-    <input class="form-check-input" type="checkbox" asp-for="GenerateInitialPromptWithAI">
-    <label class="form-check-label" asp-for="GenerateInitialPromptWithAI"></label>
-</div>
+                                <div class="mb-4">
+                                    <label asp-for="Description" class="form-label">
+                                        <i class="bi bi-card-text me-1"></i>Senaryo Açıklaması
+                                    </label>
+                                    <textarea asp-for="Description" class="form-control" rows="4" 
+                                              placeholder="Senaryonuzun amacını ve içeriğini açıklayın..."></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
 
-            
-            <div class="mb-3">
-                <button type="submit" class="btn btn-primary">Senaryoyu Oluştur ve Sınıfa Ekle</button>
-                <a asp-action="ClassroomDetails" asp-route-id="@Model.ClassroomId" class="btn btn-secondary">İptal</a>
+                                <div class="mb-4">
+                                    <label asp-for="Type" class="form-label">
+                                        <i class="bi bi-tag me-1"></i>Senaryo Türü
+                                    </label>
+                                    <select asp-for="Type" asp-items="Model.ScenarioTypes" 
+                                            class="form-select form-select-lg">
+                                        <option value="">-- Tür Seçin --</option>
+                                    </select>
+                                    <span asp-validation-for="Type" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-primary mb-3">
+                                            <i class="bi bi-info-circle me-2"></i>Yapay Zeka Ayarları
+                                        </h5>
+                                        
+                                        <div class="mb-4">
+                                            <label asp-for="TeacherProvidedInitialPrompt" class="form-label">
+                                                Başlangıç Yönergesi
+                                            </label>
+                                            <textarea asp-for="TeacherProvidedInitialPrompt" 
+                                                      class="form-control" rows="3" 
+                                                      placeholder="Eğer yapay zekanın üretmesini istemiyorsanız veya ona yön vermek istiyorsanız buraya yazın..."></textarea>
+                                            <span asp-validation-for="TeacherProvidedInitialPrompt" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   asp-for="GenerateInitialPromptWithAI" 
+                                                   id="generateWithAI">
+                                            <label class="form-check-label" for="generateWithAI">
+                                                Yapay Zeka ile Başlangıç Yönergesi Oluştur
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="ClassroomDetails" asp-route-id="@Model.ClassroomId" 
+                               class="btn btn-outline-secondary btn-lg px-4">
+                                <i class="bi bi-x-circle me-1"></i>İptal
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg px-4">
+                                <i class="bi bi-check-circle me-1"></i>Senaryoyu Oluştur
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
+<style>
+    .card {
+        border: none;
+        border-radius: 1rem;
+    }
+
+    .card-header {
+        border-radius: 1rem 1rem 0 0 !important;
+        padding: 1.5rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+
+    .btn {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+</style>
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+    
+    <script>
+        // Form validation için Bootstrap validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+} 

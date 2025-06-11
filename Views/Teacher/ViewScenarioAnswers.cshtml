@@ -6,94 +6,186 @@
     var scenarioId = ViewBag.ScenarioId;
 }
 
-<h4>@ViewData["Title"]</h4>
-<hr />
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-journal-text me-2"></i>@ViewData["Title"]
+                    </h4>
+                    <span class="badge bg-light text-primary fs-6">
+                        <i class="bi bi-people me-1"></i>@Model.Count Öğrenci Cevabı
+                    </span>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="alert alert-info mb-4">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Bu senaryoya öğrenciler tarafından verilen cevaplar aşağıdadır. Analiz detayını görmek için "Analizi Gör" linkine tıklayınız.
+                        </div>
 
-@if (Model.Any())
-{
-    <p>Bu senaryoya öğrenciler tarafından verilen cevaplar aşağıdadır. Analiz detayını görmek için "Analizi Gör" linkine tıklayınız.</p>
-    <table class="table table-hover">
-        <thead>
-            <tr>
-                <th>Öğrenci</th>
-                <th>Cevap Tarihi</th>
-                <th>Cevap (Kısa Önizleme)</th>
-                <th>Analiz Durumu</th>
-                <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var answer in Model)
-            {
-                <tr>
-                    <td>@(answer.Student?.UserName ?? "Bilinmeyen")</td>
-                    <td>@answer.SubmissionDate.ToString("g")</td>
-                    <td>
-                        @if (!string.IsNullOrEmpty(answer.AnswerText))
-                        {
-                            @(answer.AnswerText.Length > 100 ? answer.AnswerText.Substring(0, 100) + "..." : answer.AnswerText)
-                        }
-                        else
-                        {
-                            <em>Cevap boş.</em>
-                        }
-                    </td>
-                    <td>
-                        @if (answer.AnalysisResult != null)
-                        {
-                            if (string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
-                            {
-                                <span class="badge bg-success">Analiz Edildi</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-danger" title="@answer.AnalysisResult.ErrorMessage">Analiz Hatası</span>
-                            }
-                        }
-                        else
-                        {
-                            <span class="badge bg-warning text-dark">Analiz Bekleniyor/Yok</span>
-                        }
-                    </td>
-                    <td>
-                        @if (answer.AnalysisResult != null && string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
-                        {
-                            <a asp-action="ViewStudentAnswerAnalysis" asp-controller="Teacher" asp-route-studentAnswerId="@answer.Id" class="btn btn-sm btn-primary">
-                                Analizi Gör
-                            </a>
-                        }
-                        else if (answer.AnalysisResult != null && !string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
-                        {
-                             <a asp-action="ViewStudentAnswerAnalysis" asp-controller="Teacher" asp-route-studentAnswerId="@answer.Id" class="btn btn-sm btn-danger" title="Hatalı Analizi Gör">
-                                Hatalı Analizi Gör
-                            </a>
-                            @* TODO: Belki "Tekrar Analiz Et" butonu eklenebilir *@
-                        }
-                        else
-                        {
-                            @* Cevap var ama analizi yoksa, belki buradan manuel analiz tetikleme butonu eklenebilir *@
-                            <span class="text-muted">Analiz Yok</span>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <div class="alert alert-info" role="alert">
-        Bu senaryoya henüz hiçbir öğrenci cevap vermemiştir.
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Öğrenci</th>
+                                        <th>Cevap Tarihi</th>
+                                        <th>Cevap (Kısa Önizleme)</th>
+                                        <th>Analiz Durumu</th>
+                                        <th class="text-end">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var answer in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle me-2">
+                                                        <i class="bi bi-person-fill"></i>
+                                                    </div>
+                                                    <span>@(answer.Student?.UserName ?? "Bilinmeyen")</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <i class="bi bi-calendar3 me-1 text-muted"></i>
+                                                @answer.SubmissionDate.ToString("g")
+                                            </td>
+                                            <td>
+                                                <div class="answer-preview">
+                                                    @if (!string.IsNullOrEmpty(answer.AnswerText))
+                                                    {
+                                                        @(answer.AnswerText.Length > 100 ? answer.AnswerText.Substring(0, 100) + "..." : answer.AnswerText)
+                                                    }
+                                                    else
+                                                    {
+                                                        <em class="text-muted">Cevap boş.</em>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @if (answer.AnalysisResult != null)
+                                                {
+                                                    if (string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
+                                                    {
+                                                        <span class="badge bg-success">
+                                                            <i class="bi bi-check-circle me-1"></i>Analiz Edildi
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-danger" title="@answer.AnalysisResult.ErrorMessage">
+                                                            <i class="bi bi-exclamation-circle me-1"></i>Analiz Hatası
+                                                        </span>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="bi bi-clock me-1"></i>Analiz Bekleniyor
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                @if (answer.AnalysisResult != null && string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
+                                                {
+                                                    <a asp-action="ViewStudentAnswerAnalysis" asp-controller="Teacher" 
+                                                       asp-route-studentAnswerId="@answer.Id" 
+                                                       class="btn btn-sm btn-primary">
+                                                        <i class="bi bi-eye me-1"></i>Analizi Gör
+                                                    </a>
+                                                }
+                                                else if (answer.AnalysisResult != null && !string.IsNullOrEmpty(answer.AnalysisResult.ErrorMessage))
+                                                {
+                                                    <a asp-action="ViewStudentAnswerAnalysis" asp-controller="Teacher" 
+                                                       asp-route-studentAnswerId="@answer.Id" 
+                                                       class="btn btn-sm btn-danger" title="Hatalı Analizi Gör">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>Hatalı Analizi Gör
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Analiz Yok</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-journal-x display-1 text-muted mb-3"></i>
+                            <h5 class="text-muted">Henüz Cevap Bulunmuyor</h5>
+                            <p class="text-muted">Bu senaryoya henüz hiçbir öğrenci cevap vermemiştir.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="text-center">
+                @if (Model.FirstOrDefault()?.Scenario?.ClassroomId != null)
+                {
+                    <a asp-action="ClassroomDetails" asp-route-id="@Model.FirstOrDefault()?.Scenario.ClassroomId" 
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Sınıf Detaylarına Geri Dön
+                    </a>
+                }
+                else
+                {
+                    <a asp-action="Dashboard" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Öğretmen Paneline Geri Dön
+                    </a>
+                }
+            </div>
+        </div>
     </div>
-}
-
-<div class="mt-3">
-    @if (Model.FirstOrDefault()?.Scenario?.ClassroomId != null)
-    {
-        <a asp-action="ClassroomDetails" asp-route-id="@Model.FirstOrDefault()?.Scenario.ClassroomId" class="btn btn-outline-secondary">Sınıf Detaylarına Geri Dön</a>
-    }
-    else
-    {
-         <a asp-action="Dashboard" class="btn btn-outline-secondary">Öğretmen Paneline Geri Dön</a>
-    }
 </div>
+
+<style>
+    .avatar-circle {
+        width: 32px;
+        height: 32px;
+        background-color: #e9ecef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: #6c757d;
+    }
+
+    .card {
+        border: none;
+        border-radius: 1rem;
+    }
+
+    .card-header {
+        border-radius: 1rem 1rem 0 0 !important;
+        padding: 1.5rem;
+    }
+
+    .table > :not(caption) > * > * {
+        padding: 1rem;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.5em 0.8em;
+    }
+
+    .answer-preview {
+        max-width: 300px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .btn {
+        border-radius: 0.5rem;
+    }
+</style> 
